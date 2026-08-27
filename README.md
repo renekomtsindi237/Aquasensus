@@ -16,9 +16,7 @@ Aujourd’hui, on **réagit quand la pompe est déjà morte**. AquaSensus vise l
 
 ## Ce que fait la plateforme
 
-Les habitants **signalent** un dysfonctionnement (web, mobile, ou SMS/USSD simulé). Le comité **qualifie**, priorise et envoie un technicien. Chacun voit le **même état** des points d’eau sur une carte. Un **pipeline data** (extraction, indicateurs, règles explicables) alerte quand un ouvrage approche de son échéance d’entretien.
-
-Le projet porte **deux ingénieries** : logiciel (API, rôles, états, interfaces) et data (ETL, qualité, prédiction interprétable). Aucun volume d’eau n’est saisi.
+Les habitants **signalent** un dysfonctionnement (web, mobile, ou SMS/USSD simulé). Le comité **qualifie**, priorise et envoie un technicien. Chacun voit le **même état** des points d’eau sur une carte. Un moteur simple, expliquable, alerte quand un ouvrage approche de son échéance d’entretien.
 
 **Indicateur n°1 :** le **temps de rétablissement** — combien de temps les familles restent sans eau.
 

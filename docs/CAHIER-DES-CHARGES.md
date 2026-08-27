@@ -5,7 +5,7 @@
 | Métadonnée | Valeur |
 | --- | --- |
 | Référence | AQS-CDC-001 |
-| Version | 1.2 |
+| Version | 1.1 |
 | Statut | Validé pour lancement du lot L0 |
 | Type | Cahier des charges fonctionnel et technique (CdCF + spécifications) |
 | Périmètre | Version 1 (v1) de la plateforme |
@@ -20,7 +20,6 @@
 | 0.1 | — | Équipe projet | Pitch initial, problème social, orientation utilité publique |
 | 1.0 | 2026-08-26 | Équipe projet | Cahier des charges complet : périmètre v1, exigences fonctionnelles et non fonctionnelles, modèle de données, API, moteur prédictif, lotissement, recette |
 | 1.1 | 2026-08-26 | Équipe projet | Confirmation de terrain : le volume consommé est inconnaissable au quotidien (H-2). Aucun relevé, même estimé. Charge d'usage déduite du référentiel et du calendrier. |
-| 1.2 | 2026-08-27 | Équipe projet | Posture d'ingénierie : pilier data engineer (pipeline, qualité, contrat interne) à égalité avec le génie logiciel |
 
 ### Convention de lecture
 
@@ -761,8 +760,6 @@ Réponse :
 
 La prédiction v1 est **explicable par construction** : indice composite + règles à seuils + tendances sur séries temporelles courtes. Aucun modèle boîte noire. La valeur ne vient pas de la sophistication de l'algorithme mais de la structuration d'une donnée qui n'existait pas.
 
-C'est un travail d'**ingénierie data** au même titre que le Java est du génie logiciel : contrat d'extraction, nettoyage, indicateurs versionnés, publication, évaluation a posteriori. Ce n'est pas un script annexé au backend.
-
 Elle repose sur une contrainte fondatrice : **le volume consommé est inconnaissable** (H-2). Le moteur n'utilise donc que trois matières premières, toutes disponibles sans effort de terrain : ce que les habitants signalent, ce qui est déjà tombé en panne, et le temps qui passe sous une charge estimée.
 
 ### 9.2 Pipeline
@@ -918,7 +915,6 @@ Ces métriques sont calculées sur les données historiques (validation rétrosp
 | ENF-12 | Aucune perte de saisie terrain : file locale persistante côté client jusqu'à confirmation serveur. |
 | ENF-13 | Indisponibilité du service Python sans effet sur le signalement et les interventions (dégradation gracieuse : indices figés à la dernière valeur connue). |
 | ENF-14 | Redémarrage complet de la plateforme sans intervention manuelle sur les données (migrations idempotentes). |
-| ENF-15 | Le pipeline data est un livrable d'ingénierie : extraction par contrat interne, aucune grandeur de volume d'eau, run rejouable à date donnée, tests automatisés des indicateurs et des règles R1–R5. |
 
 ### 10.3 Sécurité
 
@@ -1013,7 +1009,7 @@ flowchart TB
 | Angular PWA | Rendu, saisie, file hors ligne, carte, tableau de bord | Règles métier, calcul de KPI |
 | Flutter | Parcours terrain (signalement, intervention), hors ligne | Règles métier |
 | Java / Spring | Transactions métier, machine à états, sécurité, RBAC, exposition REST, migrations Flyway | Calculs analytiques lourds |
-| Python | Ingénierie data : extraction, nettoyage, indicateurs, indice, règles d'alerte, évaluation | Exposition publique, gestion des comptes |
+| Python | Extraction, nettoyage, indicateurs, indice, règles d'alerte, évaluation | Exposition publique, gestion des comptes |
 | PostgreSQL | Source de vérité relationnelle | Traitement analytique massif |
 | MessagingGateway | Abstraction SMS/USSD, implémentation simulée en v1 | Contrat opérateur réel |
 
