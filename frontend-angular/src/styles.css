@@ -1,0 +1,13 @@
+@import './assets/design/tokens.css';
+
+body {
+  margin: 0;
+  font-family: var(--aqs-font-sans);
+  background: var(--aqs-color-background);
+  color: var(--aqs-color-text);
+}
+
+:focus-visible {
+  outline: 3px solid var(--aqs-color-focus-ring);
+  outline-offset: 2px;
+}

@@ -1,0 +1,292 @@
+/* ==========================================================================
+   AquaSensus - Tokens de design
+   Reference : docs/CHARTE-GRAPHIQUE.md (AQS-CHG-001 v1.0)
+
+   Regle : le code applicatif ne consomme que des tokens SEMANTIQUES.
+   Les tokens PRIMITIFS ne sont referencees que dans ce fichier.
+   ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------------
+     1. Primitifs - Bleu Nappe
+     --------------------------------------------------------------------- */
+  --aqs-color-blue-50: #eff8fc;
+  --aqs-color-blue-100: #d6edf7;
+  --aqs-color-blue-200: #addaef;
+  --aqs-color-blue-300: #7bc2e2;
+  --aqs-color-blue-400: #45a5d0;
+  --aqs-color-blue-500: #1b87b8;
+  --aqs-color-blue-600: #106d99;
+  --aqs-color-blue-700: #0c577c;
+  --aqs-color-blue-800: #0b4763;
+  --aqs-color-blue-900: #0a3a52;
+  --aqs-color-blue-950: #06283a;
+
+  /* Primitifs - Ocre Laterite */
+  --aqs-color-earth-100: #f7ece2;
+  --aqs-color-earth-300: #e2b78e;
+  --aqs-color-earth-500: #c86a2c;
+  --aqs-color-earth-700: #a2521f;
+  --aqs-color-earth-900: #6b3512;
+
+  /* Primitifs - Neutres */
+  --aqs-color-neutral-0: #ffffff;
+  --aqs-color-neutral-50: #f7f9fb;
+  --aqs-color-neutral-100: #eef2f6;
+  --aqs-color-neutral-200: #dde4eb;
+  --aqs-color-neutral-300: #c3cdd8;
+  --aqs-color-neutral-400: #94a3b3;
+  --aqs-color-neutral-500: #6b7b8c;
+  --aqs-color-neutral-600: #51606f;
+  --aqs-color-neutral-700: #3b4855;
+  --aqs-color-neutral-800: #27313b;
+  --aqs-color-neutral-900: #161e26;
+
+  /* Primitifs - Etats (reserves, jamais decoratifs) */
+  --aqs-color-green-500: #1e8e4e;
+  --aqs-color-green-700: #16713e;
+  --aqs-color-green-50: #e6f4ec;
+  --aqs-color-amber-500: #f2a900;
+  --aqs-color-amber-700: #8a6000;
+  --aqs-color-amber-50: #fef3dc;
+  --aqs-color-orange-500: #d2620e;
+  --aqs-color-orange-700: #a34a08;
+  --aqs-color-orange-50: #fdeee1;
+  --aqs-color-red-500: #c62828;
+  --aqs-color-red-700: #a31d1d;
+  --aqs-color-red-50: #fceaea;
+
+  /* ---------------------------------------------------------------------
+     2. Semantiques - Surfaces et texte
+     --------------------------------------------------------------------- */
+  --aqs-color-background: var(--aqs-color-neutral-50);
+  --aqs-color-surface: var(--aqs-color-neutral-0);
+  --aqs-color-surface-raised: var(--aqs-color-neutral-0);
+  --aqs-color-surface-muted: var(--aqs-color-neutral-100);
+  --aqs-color-border: var(--aqs-color-neutral-200);
+  --aqs-color-border-strong: var(--aqs-color-neutral-300);
+
+  --aqs-color-text: var(--aqs-color-neutral-900);
+  --aqs-color-text-secondary: var(--aqs-color-neutral-600);
+  --aqs-color-text-tertiary: var(--aqs-color-neutral-500);
+  --aqs-color-text-on-action: var(--aqs-color-neutral-0);
+
+  /* Semantiques - Action */
+  --aqs-color-action: var(--aqs-color-blue-600);
+  --aqs-color-action-hover: var(--aqs-color-blue-700);
+  --aqs-color-action-active: var(--aqs-color-blue-800);
+  --aqs-color-action-subtle: var(--aqs-color-blue-50);
+  --aqs-color-focus-ring: var(--aqs-color-blue-400);
+
+  /* Semantiques - Marque */
+  --aqs-color-brand: var(--aqs-color-blue-500);
+  --aqs-color-brand-deep: var(--aqs-color-blue-800);
+  --aqs-color-accent: var(--aqs-color-earth-500);
+  --aqs-color-accent-text: var(--aqs-color-earth-700);
+  --aqs-color-accent-subtle: var(--aqs-color-earth-100);
+
+  /* ---------------------------------------------------------------------
+     3. Semantiques - Etats des points d'eau
+     Toujours associes a une FORME et a un LIBELLE (WCAG, ENF-43).
+     --------------------------------------------------------------------- */
+  --aqs-color-state-operationnel: var(--aqs-color-green-500);
+  --aqs-color-state-operationnel-bg: var(--aqs-color-green-50);
+  --aqs-color-state-operationnel-text: var(--aqs-color-green-700);
+
+  --aqs-color-state-surveillance: var(--aqs-color-amber-500);
+  --aqs-color-state-surveillance-bg: var(--aqs-color-amber-50);
+  --aqs-color-state-surveillance-text: var(--aqs-color-amber-700);
+
+  --aqs-color-state-risque: var(--aqs-color-orange-500);
+  --aqs-color-state-risque-bg: var(--aqs-color-orange-50);
+  --aqs-color-state-risque-text: var(--aqs-color-orange-700);
+
+  --aqs-color-state-panne: var(--aqs-color-red-500);
+  --aqs-color-state-panne-bg: var(--aqs-color-red-50);
+  --aqs-color-state-panne-text: var(--aqs-color-red-700);
+
+  --aqs-color-state-reparation: var(--aqs-color-blue-600);
+  --aqs-color-state-reparation-bg: var(--aqs-color-blue-100);
+  --aqs-color-state-reparation-text: var(--aqs-color-blue-800);
+
+  --aqs-color-state-hors-service: var(--aqs-color-neutral-500);
+  --aqs-color-state-hors-service-bg: var(--aqs-color-neutral-100);
+  --aqs-color-state-hors-service-text: var(--aqs-color-neutral-700);
+
+  --aqs-color-state-inconnu: var(--aqs-color-neutral-400);
+  --aqs-color-state-inconnu-bg: var(--aqs-color-neutral-50);
+  --aqs-color-state-inconnu-text: var(--aqs-color-neutral-600);
+
+  /* Semantiques - Niveaux d'alerte */
+  --aqs-color-alert-modere: var(--aqs-color-amber-500);
+  --aqs-color-alert-eleve: var(--aqs-color-orange-500);
+  --aqs-color-alert-critique: var(--aqs-color-red-500);
+
+  /* Semantiques - Retroaction systeme */
+  --aqs-color-feedback-success: var(--aqs-color-green-500);
+  --aqs-color-feedback-info: var(--aqs-color-blue-600);
+  --aqs-color-feedback-warning: var(--aqs-color-amber-500);
+  --aqs-color-feedback-error: var(--aqs-color-red-500);
+  --aqs-color-feedback-offline: var(--aqs-color-neutral-500);
+
+  /* ---------------------------------------------------------------------
+     4. Typographie
+     --------------------------------------------------------------------- */
+  --aqs-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --aqs-font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --aqs-font-weight-regular: 400;
+  --aqs-font-weight-medium: 500;
+  --aqs-font-weight-semibold: 600;
+  --aqs-font-weight-bold: 700;
+
+  --aqs-font-size-display: 2.5rem;   /* 40px / 48 */
+  --aqs-font-size-h1: 2rem;          /* 32px / 40 */
+  --aqs-font-size-h2: 1.5rem;        /* 24px / 32 */
+  --aqs-font-size-h3: 1.25rem;       /* 20px / 28 */
+  --aqs-font-size-h4: 1.125rem;      /* 18px / 26 */
+  --aqs-font-size-body-lg: 1.0625rem;/* 17px / 26 */
+  --aqs-font-size-body: 1rem;        /* 16px / 24 */
+  --aqs-font-size-body-sm: 0.875rem; /* 14px / 21 */
+  --aqs-font-size-caption: 0.75rem;  /* 12px / 16 */
+  --aqs-font-size-overline: 0.6875rem;/* 11px / 16 */
+  --aqs-font-size-metric-xl: 2.25rem;/* 36px / 40 */
+  --aqs-font-size-metric: 1.5rem;    /* 24px / 28 */
+
+  --aqs-line-height-tight: 1.2;
+  --aqs-line-height-snug: 1.4;
+  --aqs-line-height-base: 1.5;
+  --aqs-line-height-relaxed: 1.6;
+
+  /* ---------------------------------------------------------------------
+     5. Espacement, rayons, elevation, mouvement
+     --------------------------------------------------------------------- */
+  --aqs-space-1: 4px;
+  --aqs-space-2: 8px;
+  --aqs-space-3: 12px;
+  --aqs-space-4: 16px;
+  --aqs-space-5: 20px;
+  --aqs-space-6: 24px;
+  --aqs-space-8: 32px;
+  --aqs-space-10: 40px;
+  --aqs-space-12: 48px;
+  --aqs-space-16: 64px;
+
+  --aqs-radius-sm: 4px;
+  --aqs-radius-md: 8px;
+  --aqs-radius-lg: 12px;
+  --aqs-radius-xl: 16px;
+  --aqs-radius-pill: 999px;
+  --aqs-radius-full: 50%;
+
+  --aqs-elev-0: none;
+  --aqs-elev-1: 0 1px 2px rgba(11, 71, 99, 0.08);
+  --aqs-elev-2: 0 2px 8px rgba(11, 71, 99, 0.1);
+  --aqs-elev-3: 0 8px 24px rgba(11, 71, 99, 0.14);
+  --aqs-elev-4: 0 16px 40px rgba(11, 71, 99, 0.18);
+
+  --aqs-motion-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --aqs-motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --aqs-motion-slow: 320ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* Cibles tactiles - ENF-42 */
+  --aqs-target-min: 48px;
+  --aqs-target-field: 56px;
+
+  /* Points de rupture (reference pour les media queries) */
+  --aqs-breakpoint-sm: 480px;
+  --aqs-breakpoint-md: 768px;
+  --aqs-breakpoint-lg: 1024px;
+  --aqs-breakpoint-xl: 1280px;
+  --aqs-breakpoint-2xl: 1536px;
+}
+
+/* ==========================================================================
+   Mode sombre : seuls les tokens SEMANTIQUES sont redefinis.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --aqs-color-background: var(--aqs-color-blue-950);
+  --aqs-color-surface: #0f2b3c;
+  --aqs-color-surface-raised: #16394d;
+  --aqs-color-surface-muted: #12313f;
+  --aqs-color-border: #20465c;
+  --aqs-color-border-strong: #2e5a72;
+
+  --aqs-color-text: #eaf2f7;
+  --aqs-color-text-secondary: #a7bdcb;
+  --aqs-color-text-tertiary: #8aa3b4;
+  --aqs-color-text-on-action: #06283a;
+
+  --aqs-color-action: var(--aqs-color-blue-400);
+  --aqs-color-action-hover: var(--aqs-color-blue-300);
+  --aqs-color-action-active: var(--aqs-color-blue-200);
+  --aqs-color-action-subtle: #12384c;
+  --aqs-color-focus-ring: var(--aqs-color-blue-300);
+
+  --aqs-color-state-operationnel: #4cc47e;
+  --aqs-color-state-operationnel-bg: #123425;
+  --aqs-color-state-operationnel-text: #9fe3ba;
+
+  --aqs-color-state-surveillance: #ffc94d;
+  --aqs-color-state-surveillance-bg: #3a2c08;
+  --aqs-color-state-surveillance-text: #ffdf94;
+
+  --aqs-color-state-risque: #ff9b52;
+  --aqs-color-state-risque-bg: #3d2210;
+  --aqs-color-state-risque-text: #ffc59b;
+
+  --aqs-color-state-panne: #ff7373;
+  --aqs-color-state-panne-bg: #3d1717;
+  --aqs-color-state-panne-text: #ffb3b3;
+
+  --aqs-color-state-reparation: var(--aqs-color-blue-400);
+  --aqs-color-state-reparation-bg: #12384c;
+  --aqs-color-state-reparation-text: #b8dff0;
+
+  --aqs-color-state-hors-service: #8aa3b4;
+  --aqs-color-state-hors-service-bg: #1a2f3c;
+  --aqs-color-state-hors-service-text: #c3d3dd;
+
+  --aqs-color-alert-modere: #ffc94d;
+  --aqs-color-alert-eleve: #ff9b52;
+  --aqs-color-alert-critique: #ff7373;
+
+  --aqs-color-feedback-success: #4cc47e;
+  --aqs-color-feedback-info: var(--aqs-color-blue-400);
+  --aqs-color-feedback-warning: #ffc94d;
+  --aqs-color-feedback-error: #ff7373;
+  --aqs-color-feedback-offline: #8aa3b4;
+
+  /* L'elevation passe par la surface, pas par l'ombre. */
+  --aqs-elev-1: none;
+  --aqs-elev-2: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --aqs-elev-3: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --aqs-elev-4: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ==========================================================================
+   Bases transverses
+   ========================================================================== */
+
+*:focus-visible {
+  outline: 2px solid var(--aqs-color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Les valeurs comparees en colonne s'alignent (charte, 5.3). */
+.aqs-numeric {
+  font-family: var(--aqs-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

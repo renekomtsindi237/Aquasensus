@@ -1,0 +1,20 @@
+{
+  "name": "AquaSensus",
+  "short_name": "AquaSensus",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fb",
+  "theme_color": "#106d99",
+  "icons": [
+    {
+      "src": "assets/brand/aquasensus-mark-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/brand/aquasensus-mark-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

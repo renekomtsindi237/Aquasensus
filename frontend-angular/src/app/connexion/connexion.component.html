@@ -1,0 +1,21 @@
+<main class="ecran">
+  <img class="logo" src="assets/brand/aquasensus-logo.png" width="280" height="80" alt="AquaSensus" />
+  <h1>Connexion</h1>
+  <p class="intro">Suivi des forages communautaires — aucun relevé de volume d’eau.</p>
+  <form (ngSubmit)="soumettre()">
+    <label>
+      Identifiant
+      <input name="identifiant" [(ngModel)]="identifiant" autocomplete="username" required />
+    </label>
+    <label>
+      Mot de passe
+      <input name="motDePasse" type="password" [(ngModel)]="motDePasse" autocomplete="current-password" required />
+    </label>
+    <button type="submit" [disabled]="enCours">Entrer</button>
+  </form>
+  @if (message) {
+    <p class="message" role="status">{{ message }}</p>
+  }
+  <p class="lien"><button type="button" class="lien-btn" (click)="demanderReset()">Mot de passe oublié (SMS simulé)</button></p>
+  <p class="lien"><a routerLink="/points">Voir les points d’eau (sans compte)</a></p>
+</main>
