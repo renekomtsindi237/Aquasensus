@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: aquasensus-core
+  profiles:
+    default: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    fail-on-missing-locations: true
+  datasource:
+    url: ${AQS_DB_URL:jdbc:postgresql://localhost:5432/aquasensus}
+    username: ${AQS_DB_USER:aquasensus}
+    password: ${AQS_DB_PASSWORD:aquasensus}
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${AQS_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    path: /api/docs
+  swagger-ui:
+    path: /api/docs/ui
+  paths-to-exclude: /internal/**
+
+aquasensus:
+  jwt:
+    secret: ${AQS_JWT_SECRET:dev-only-change-me-32-octets-min!!}
+  admin:
+    password: ${AQS_ADMIN_PASSWORD:ChangeMoi!2026}
+  emprise:
+    lat-min: 1.65
+    lat-max: 13.08
+    lon-min: 8.45
+    lon-max: 16.20
+  interne:
+    secret: ${AQS_INTERNAL_SECRET:dev-internal-secret-change-me}
+  messaging:
+    adaptateur: simulateur
+  ussd:
+    ttl-seconds: 90
+  cors:
+    origins: ${AQS_CORS_ORIGINS:http://localhost:4200,http://localhost}
+  reset:
+    ttl-minutes: 15
+    code-fixe: ${AQS_RESET_CODE:}
+  fichiers:
+    photos: ${AQS_PHOTOS_DIR:./data/photos}
+
+logging:
+  pattern:
+    console: "%d{ISO8601} %-5level [%X{correlationId:-}] %logger{36} - %msg%n"

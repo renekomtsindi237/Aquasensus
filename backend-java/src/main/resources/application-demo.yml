@@ -1,0 +1,5 @@
+# Profil démo ONG / soutenance. Charge le seed Flyway répétables (ISS-065).
+# Jamais activé en production.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
