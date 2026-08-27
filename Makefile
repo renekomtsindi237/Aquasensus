@@ -34,7 +34,8 @@ help:
 	@echo "  make config     Valide compose.yml"
 	@echo "  make clean      down + suppression du volume Postgres (données perdues)"
 	@echo ""
-	@echo "Sans Make, à la racine : docker compose --env-file .env up --build -d"
+	@echo "Sans Make (Linux/macOS) : docker compose --env-file .env up --build -d"
+	@echo "Windows cmd : make.cmd (ex. make build) — pas besoin de GNU Make"
 
 env:
 	@if [ ! -f $(ENV_FILE) ]; then cp .env.example $(ENV_FILE); echo "Créé $(ENV_FILE) — remplacer les secrets."; else echo "$(ENV_FILE) déjà présent."; fi

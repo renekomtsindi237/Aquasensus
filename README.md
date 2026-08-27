@@ -6,13 +6,15 @@ Documentation : `docs/CONTEXTE-AQUASENSUS.md` (bible). Recette : `docs/recette/`
 
 ## Démarrage global (Docker Compose)
 
-À la racine du dépôt (`compose.yml`) :
+À la racine du dépôt (`compose.yml`). **Windows (cmd)** : `make.cmd` permet `make build` sans installer GNU Make.
 
 ```powershell
 copy .env.example .env
-docker compose --env-file .env up --build -d
-docker compose ps
+make build
+make up
 ```
+
+Équivalent : `docker compose --env-file .env up --build -d` puis `docker compose ps`.
 
 | Service | Rôle | Accès |
 | --- | --- | --- |
@@ -22,9 +24,7 @@ docker compose ps
 | `web` | PWA Angular (Nginx) | via `proxy` |
 | `proxy` | Nginx reverse proxy | `http://localhost/` |
 
-Santé : `http://localhost/api/v1/health`. Arrêt : `docker compose down`. Pour le seed soutenance, décommenter `AQS_PROFILE=demo` dans `.env`.
-
-Raccourcis optionnels : `make help`.
+Santé : `http://localhost/api/v1/health`. Arrêt : `make down` ou `docker compose down`. Pour le seed soutenance, décommenter `AQS_PROFILE=demo` dans `.env`.
 
 ## Services isolés (sans Docker)
 
