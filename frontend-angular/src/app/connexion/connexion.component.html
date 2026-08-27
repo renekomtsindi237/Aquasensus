@@ -1,21 +1,57 @@
 <main class="ecran">
   <img class="logo" src="assets/brand/aquasensus-logo.png" width="280" height="80" alt="AquaSensus" />
-  <h1>Connexion</h1>
+  <h1>{{ mode === 'connexion' ? 'Connexion' : 'Créer un compte usager' }}</h1>
   <p class="intro">Suivi des forages communautaires — aucun relevé de volume d’eau.</p>
-  <form (ngSubmit)="soumettre()">
-    <label>
-      Identifiant
-      <input name="identifiant" [(ngModel)]="identifiant" autocomplete="username" required />
-    </label>
-    <label>
-      Mot de passe
-      <input name="motDePasse" type="password" [(ngModel)]="motDePasse" autocomplete="current-password" required />
-    </label>
-    <button type="submit" [disabled]="enCours">Entrer</button>
-  </form>
+  <p class="onglets">
+    <button type="button" class="lien-btn" [class.actif]="mode === 'connexion'" (click)="mode = 'connexion'">
+      Se connecter
+    </button>
+    <button type="button" class="lien-btn" [class.actif]="mode === 'inscription'" (click)="mode = 'inscription'">
+      Créer un compte
+    </button>
+  </p>
+  @if (mode === 'connexion') {
+    <form (ngSubmit)="soumettre()">
+      <label>
+        Identifiant
+        <input name="identifiant" [(ngModel)]="identifiant" autocomplete="username" required />
+      </label>
+      <label>
+        Mot de passe
+        <input name="motDePasse" type="password" [(ngModel)]="motDePasse" autocomplete="current-password" required />
+      </label>
+      <button type="submit" [disabled]="enCours">Entrer</button>
+    </form>
+  } @else {
+    <form (ngSubmit)="inscrire()">
+      <label>
+        Identifiant du compte
+        <input name="identifiantInscription" [(ngModel)]="identifiant" autocomplete="username" required />
+      </label>
+      <label>
+        Nom affiché
+        <input name="nomAffichage" [(ngModel)]="nomAffichage" autocomplete="name" required />
+      </label>
+      <label>
+        Mot de passe (10 caractères min.)
+        <input
+          name="motDePasseInscription"
+          type="password"
+          [(ngModel)]="motDePasse"
+          autocomplete="new-password"
+          minlength="10"
+          required
+        />
+      </label>
+      <button type="submit" [disabled]="enCours">S’inscrire</button>
+    </form>
+  }
   @if (message) {
     <p class="message" role="status">{{ message }}</p>
   }
-  <p class="lien"><button type="button" class="lien-btn" (click)="demanderReset()">Mot de passe oublié (SMS simulé)</button></p>
+  @if (mode === 'connexion') {
+    <p class="lien"><button type="button" class="lien-btn" (click)="demanderReset()">Mot de passe oublié (SMS simulé)</button></p>
+  }
+  <p class="lien"><a routerLink="/">Retour à l’accueil</a></p>
   <p class="lien"><a routerLink="/points">Voir les points d’eau (sans compte)</a></p>
 </main>

@@ -5,19 +5,23 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers/fake_api_client.dart';
 
+Future<void> allerConnexion(WidgetTester tester) async {
+  await tester.tap(find.text('Se connecter'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('affiche l’écran de connexion sans volume saisi', (tester) async {
+  testWidgets('affiche la présentation sans volume saisi', (tester) async {
     await tester.pumpWidget(AquasensusApp(api: FakeApiClient(), file: FileLocale()));
-    expect(find.text('Connexion'), findsOneWidget);
+    expect(find.textContaining('Anticiper la panne'), findsOneWidget);
     expect(find.textContaining('volume'), findsOneWidget);
-    expect(find.text('Identifiant'), findsOneWidget);
-    expect(find.text('Mot de passe'), findsOneWidget);
     expect(find.text('Litres'), findsNothing);
     expect(find.text('Bidons'), findsNothing);
   });
 
   testWidgets('SQ1 non passant : mot de passe incorrect (401)', (tester) async {
     await tester.pumpWidget(AquasensusApp(api: FakeApiClient(), file: FileLocale()));
+    await allerConnexion(tester);
     await tester.enterText(find.byType(TextField).at(0), 'admin@aquasensus.local');
     await tester.enterText(find.byType(TextField).at(1), 'mauvais');
     await tester.tap(find.text('Entrer'));
@@ -27,6 +31,7 @@ void main() {
 
   testWidgets('SQ1 non passant : compte verrouillé (423)', (tester) async {
     await tester.pumpWidget(AquasensusApp(api: FakeApiClient(), file: FileLocale()));
+    await allerConnexion(tester);
     await tester.enterText(find.byType(TextField).at(0), 'verrouille@aquasensus.local');
     await tester.enterText(find.byType(TextField).at(1), 'ChangeMoi!2026');
     await tester.tap(find.text('Entrer'));
@@ -34,18 +39,19 @@ void main() {
     expect(find.textContaining('verrouillé'), findsOneWidget);
   });
 
-  testWidgets('SQ1 MDP temporaire : pas de navigation', (tester) async {
+  testWidgets('SQ1 MDP temporaire : écran de changement (EF-83)', (tester) async {
     await tester.pumpWidget(AquasensusApp(api: FakeApiClient(), file: FileLocale()));
+    await allerConnexion(tester);
     await tester.enterText(find.byType(TextField).at(0), 'tempo@aquasensus.local');
     await tester.enterText(find.byType(TextField).at(1), 'ChangeMoi!2026');
     await tester.tap(find.text('Entrer'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('temporaire'), findsOneWidget);
-    expect(find.text('Connexion'), findsOneWidget);
+    expect(find.text('Changer le mot de passe'), findsOneWidget);
   });
 
   testWidgets('SQ1 passant : ouvre le terrain', (tester) async {
     await tester.pumpWidget(AquasensusApp(api: FakeApiClient(), file: FileLocale()));
+    await allerConnexion(tester);
     await tester.enterText(find.byType(TextField).at(0), 'tech@aquasensus.local');
     await tester.enterText(find.byType(TextField).at(1), 'ChangeMoi!2026');
     await tester.tap(find.text('Entrer'));

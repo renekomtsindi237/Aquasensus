@@ -49,7 +49,13 @@ abstract final class AqsColors {
   static const action = blue600;
   static const actionHover = blue700;
   static const brand = blue500;
+  static const brandDeep = blue800;
   static const focusRing = blue400;
+  static const chrome = blue900;
+  static const chromeHover = blue800;
+  static const chromeActive = blue700;
+  static const chromeText = neutral0;
+  static const chromeMuted = blue200;
 
   // Semantiques - etats des points d'eau (mode clair)
   static const stateOperationnel = Color(0xFF1E8E4E);

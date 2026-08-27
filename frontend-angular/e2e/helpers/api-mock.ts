@@ -36,6 +36,11 @@ function estAdmin(route: Route): boolean {
   return jeton(route).includes('admin');
 }
 
+function peutKpi(route: Route): boolean {
+  const a = jeton(route);
+  return a.includes('admin') || a.includes('delegue') || a.includes('partenaire');
+}
+
 function estDelegueOuAdmin(route: Route): boolean {
   const a = jeton(route);
   return a.includes('admin') || a.includes('delegue');
@@ -91,9 +96,12 @@ export async function intercepterApi(page: Page): Promise<void> {
       return json(route, 403, { titre: 'Accès refusé' });
     }
     if (
-      (path.endsWith('/work-queue') || path.includes('/qualification') || path.includes('/dashboard')) &&
+      (path.endsWith('/work-queue') || path.includes('/qualification')) &&
       !estDelegueOuAdmin(route)
     ) {
+      return json(route, 403, { titre: 'Accès refusé' });
+    }
+    if (path.includes('/dashboard') && !peutKpi(route)) {
       return json(route, 403, { titre: 'Accès refusé' });
     }
 
@@ -109,13 +117,17 @@ export async function intercepterApi(page: Page): Promise<void> {
       }
       const admin = identifiant.includes('admin');
       const delegue = identifiant.includes('delegue');
+      const partenaire = identifiant.includes('partenaire');
+      const tech = identifiant.includes('tech');
       const roles = admin
         ? ['ADMIN']
         : delegue
           ? ['DELEGUE']
-          : identifiant.includes('tech')
-            ? ['TECHNICIEN']
-            : ['USAGER'];
+          : partenaire
+            ? ['PARTENAIRE']
+            : tech
+              ? ['TECHNICIEN']
+              : ['USAGER'];
       return json(route, 200, {
         jetonAcces: identifiant.includes('exterieur')
           ? 'e2e-hors'
@@ -123,13 +135,40 @@ export async function intercepterApi(page: Page): Promise<void> {
             ? 'e2e-admin'
             : delegue
               ? 'e2e-delegue'
-              : identifiant.includes('tech')
-                ? 'e2e-tech'
-                : 'e2e-usager',
+              : partenaire
+                ? 'e2e-partenaire'
+                : tech
+                  ? 'e2e-tech'
+                  : 'e2e-usager',
         nomAffichage: 'Compte démo',
         roles,
         doitChangerMotDePasse: identifiant.includes('tempo')
       });
+    }
+
+    if (method === 'POST' && path.endsWith('/auth/register')) {
+      const b = body();
+      const identifiant = String(b.identifiant ?? '');
+      const motDePasse = String(b.motDePasse ?? '');
+      if (identifiant.includes('admin@') || identifiant === 'habitant@aquasensus.local') {
+        return json(route, 409, { titre: 'Un compte existe déjà pour cet identifiant.' });
+      }
+      if (motDePasse.length < 10) {
+        return json(route, 400, { titre: 'Mot de passe trop court' });
+      }
+      return json(route, 201, {
+        jetonAcces: 'e2e-usager',
+        nomAffichage: String(b.nomAffichage ?? 'Usager'),
+        roles: ['USAGER'],
+        doitChangerMotDePasse: false
+      });
+    }
+
+    if (method === 'POST' && path.endsWith('/auth/password/change')) {
+      if (!jeton(route)) {
+        return json(route, 401, { titre: 'Non authentifié' });
+      }
+      return route.fulfill({ status: 204 });
     }
 
     if (method === 'POST' && path.includes('/auth/password/reset-request')) {

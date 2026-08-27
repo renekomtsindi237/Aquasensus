@@ -85,6 +85,14 @@
   --aqs-color-accent-text: var(--aqs-color-earth-700);
   --aqs-color-accent-subtle: var(--aqs-color-earth-100);
 
+  /* Semantiques - chrome applicatif (barre laterale, en-tete connecte) */
+  --aqs-color-chrome: var(--aqs-color-blue-900);
+  --aqs-color-chrome-hover: var(--aqs-color-blue-800);
+  --aqs-color-chrome-active: var(--aqs-color-blue-700);
+  --aqs-color-chrome-text: var(--aqs-color-neutral-0);
+  --aqs-color-chrome-muted: var(--aqs-color-blue-200);
+  --aqs-color-chrome-border: var(--aqs-color-blue-800);
+
   /* ---------------------------------------------------------------------
      3. Semantiques - Etats des points d'eau
      Toujours associes a une FORME et a un LIBELLE (WCAG, ENF-43).
@@ -223,6 +231,13 @@
   --aqs-color-action-active: var(--aqs-color-blue-200);
   --aqs-color-action-subtle: #12384c;
   --aqs-color-focus-ring: var(--aqs-color-blue-300);
+
+  --aqs-color-chrome: var(--aqs-color-blue-950);
+  --aqs-color-chrome-hover: #0f2b3c;
+  --aqs-color-chrome-active: #16394d;
+  --aqs-color-chrome-text: #eaf2f7;
+  --aqs-color-chrome-muted: #a7bdcb;
+  --aqs-color-chrome-border: #20465c;
 
   --aqs-color-state-operationnel: #4cc47e;
   --aqs-color-state-operationnel-bg: #123425;

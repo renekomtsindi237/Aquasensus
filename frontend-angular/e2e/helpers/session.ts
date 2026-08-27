@@ -5,7 +5,7 @@ export async function connecter(
   identifiant = 'admin@aquasensus.local',
   motDePasse = 'ChangeMoi!2026'
 ): Promise<void> {
-  await page.goto('/');
+  await page.goto('/connexion');
   await page.getByLabel('Identifiant').fill(identifiant);
   await page.getByLabel('Mot de passe').fill(motDePasse);
   await page.getByRole('button', { name: 'Entrer' }).click();

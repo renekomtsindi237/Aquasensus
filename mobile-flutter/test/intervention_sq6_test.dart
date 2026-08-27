@@ -17,6 +17,8 @@ Future<void> _grandeSurface(WidgetTester tester) async {
 Future<void> _ouvrirIntervention(WidgetTester tester, {required FakeApiClient api, FileLocale? file}) async {
   await _grandeSurface(tester);
   await tester.pumpWidget(AquasensusApp(api: api, file: file ?? FileLocale()));
+  await tester.tap(find.text('Se connecter'));
+  await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextField).at(0), 'tech@aquasensus.local');
   await tester.enterText(find.byType(TextField).at(1), 'ok');
   await tester.tap(find.text('Entrer'));
@@ -86,6 +88,8 @@ void main() {
       resume: 'x',
     );
     await tester.pumpWidget(AquasensusApp(api: api, file: file));
+    await tester.tap(find.text('Se connecter'));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).at(0), 'tech@aquasensus.local');
     await tester.enterText(find.byType(TextField).at(1), 'ok');
     await tester.tap(find.text('Entrer'));

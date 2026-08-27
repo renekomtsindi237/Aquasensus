@@ -1,10 +1,49 @@
 import 'dart:convert';
 
 import 'package:aquasensus_mobile/api/api_client.dart';
+import 'package:aquasensus_mobile/ecrans/coquille.dart';
+import 'package:aquasensus_mobile/ecrans/presentation.dart';
 import 'package:aquasensus_mobile/session.dart';
 import 'package:aquasensus_mobile/theme/tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
+Widget corpsAccueil(List<String> roles, BuildContext context) {
+  void signaler() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EcranSignaler()));
+  }
+
+  if (roles.contains('ADMIN')) {
+    return const EcranDashAdmin();
+  }
+  if (roles.contains('DELEGUE')) {
+    return const EcranDashDelegue();
+  }
+  if (roles.contains('PARTENAIRE')) {
+    return const EcranDashPartenaire();
+  }
+  if (roles.contains('TECHNICIEN')) {
+    return const EcranTerrain();
+  }
+  return EcranDashUsager(onSignaler: signaler);
+}
+
+Widget coquilleSession(SessionTerrain session, BuildContext context) {
+  return EcranCoquille(
+    corps: corpsAccueil(session.roles, context),
+    onSignaler: () {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EcranSignaler()));
+    },
+    onDeconnexion: () {
+      session.api.jeton = null;
+      session.roles = const [];
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const EcranPresentation()),
+        (_) => false,
+      );
+    },
+  );
+}
 
 class EcranConnexion extends StatefulWidget {
   const EcranConnexion({super.key});
@@ -16,13 +55,32 @@ class EcranConnexion extends StatefulWidget {
 class _EcranConnexionState extends State<EcranConnexion> {
   final _identifiant = TextEditingController();
   final _motDePasse = TextEditingController();
+  final _nom = TextEditingController();
+  bool _inscription = false;
   String? _message;
 
   @override
   void dispose() {
     _identifiant.dispose();
     _motDePasse.dispose();
+    _nom.dispose();
     super.dispose();
+  }
+
+  Future<void> _appliquerAuth(SessionTerrain session, Map<String, dynamic> corps) async {
+    session.api.jeton = corps['jetonAcces'] as String?;
+    session.roles = List<String>.from((corps['roles'] as List<dynamic>?) ?? const []);
+    session.doitChangerMotDePasse = corps['doitChangerMotDePasse'] == true;
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => session.doitChangerMotDePasse
+            ? const EcranMotDePasse()
+            : coquilleSession(session, context),
+      ),
+    );
   }
 
   Future<void> _entrer() async {
@@ -47,23 +105,38 @@ class _EcranConnexionState extends State<EcranConnexion> {
         setState(() => _message = 'Identifiant ou mot de passe incorrect.');
         return;
       }
-      final corps = jsonDecode(res.body) as Map<String, dynamic>;
-      session.api.jeton = corps['jetonAcces'] as String?;
-      if (corps['doitChangerMotDePasse'] == true) {
-        setState(
-          () => _message =
-              'Changez le mot de passe temporaire (EF-83) via l’API ou un administrateur.',
-        );
-        return;
-      }
+      await _appliquerAuth(session, jsonDecode(res.body) as Map<String, dynamic>);
+    } on HorsLigneException {
+      setState(() => _message = 'Hors ligne : connexion impossible.');
+    }
+  }
+
+  Future<void> _inscrire() async {
+    final session = AqsScope.lire(context);
+    setState(() => _message = null);
+    try {
+      final res = await session.api.post(
+        '/api/v1/auth/register',
+        body: {
+          'identifiant': _identifiant.text,
+          'nomAffichage': _nom.text,
+          'motDePasse': _motDePasse.text,
+        },
+      );
       if (!mounted) {
         return;
       }
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const EcranTerrain()),
-      );
+      if (res.statusCode == 409) {
+        setState(() => _message = 'Un compte existe déjà pour cet identifiant.');
+        return;
+      }
+      if (res.statusCode != 201) {
+        setState(() => _message = 'Inscription impossible (10 caractères min.).');
+        return;
+      }
+      await _appliquerAuth(session, jsonDecode(res.body) as Map<String, dynamic>);
     } on HorsLigneException {
-      setState(() => _message = 'Hors ligne : connexion impossible.');
+      setState(() => _message = 'Hors ligne : inscription impossible.');
     }
   }
 
@@ -77,7 +150,7 @@ class _EcranConnexionState extends State<EcranConnexion> {
             children: [
               Image.asset('assets/brand/aquasensus-logo.png', height: 72),
               const SizedBox(height: AqsSpacing.s6),
-              Text('Connexion', style: AqsTypography.h2),
+              Text(_inscription ? 'Créer un compte usager' : 'Connexion', style: AqsTypography.h2),
               const SizedBox(height: AqsSpacing.s2),
               Text(
                 'Suivi des forages — aucune saisie de volume d’eau.',
@@ -88,6 +161,13 @@ class _EcranConnexionState extends State<EcranConnexion> {
                 controller: _identifiant,
                 decoration: const InputDecoration(labelText: 'Identifiant'),
               ),
+              if (_inscription) ...[
+                const SizedBox(height: AqsSpacing.s4),
+                TextField(
+                  controller: _nom,
+                  decoration: const InputDecoration(labelText: 'Nom affiché'),
+                ),
+              ],
               const SizedBox(height: AqsSpacing.s4),
               TextField(
                 controller: _motDePasse,
@@ -96,8 +176,12 @@ class _EcranConnexionState extends State<EcranConnexion> {
               ),
               const SizedBox(height: AqsSpacing.s6),
               FilledButton(
-                onPressed: _entrer,
-                child: const Text('Entrer'),
+                onPressed: _inscription ? _inscrire : _entrer,
+                child: Text(_inscription ? 'S’inscrire' : 'Entrer'),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _inscription = !_inscription),
+                child: Text(_inscription ? 'Déjà un compte' : 'Créer un compte'),
               ),
               TextButton(
                 onPressed: () {
@@ -114,6 +198,95 @@ class _EcranConnexionState extends State<EcranConnexion> {
                     _message!,
                     style: TextStyle(color: AqsColors.statePanne),
                   ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class EcranMotDePasse extends StatefulWidget {
+  const EcranMotDePasse({super.key});
+
+  @override
+  State<EcranMotDePasse> createState() => _EcranMotDePasseState();
+}
+
+class _EcranMotDePasseState extends State<EcranMotDePasse> {
+  final _actuel = TextEditingController();
+  final _nouveau = TextEditingController();
+  String? _message;
+
+  @override
+  void dispose() {
+    _actuel.dispose();
+    _nouveau.dispose();
+    super.dispose();
+  }
+
+  Future<void> _enregistrer() async {
+    final session = AqsScope.lire(context);
+    setState(() => _message = null);
+    try {
+      final res = await session.api.post(
+        '/api/v1/auth/password/change',
+        body: {'actuel': _actuel.text, 'nouveau': _nouveau.text},
+      );
+      if (!mounted) {
+        return;
+      }
+      if (res.statusCode != 204 && res.statusCode != 200) {
+        setState(() => _message = 'Changement impossible.');
+        return;
+      }
+      session.doitChangerMotDePasse = false;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => coquilleSession(session, context)),
+      );
+    } on HorsLigneException {
+      setState(() => _message = 'Hors ligne : changement impossible.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AqsSpacing.s6),
+          child: ListView(
+            children: [
+              Image.asset('assets/brand/aquasensus-logo.png', height: 72),
+              const SizedBox(height: AqsSpacing.s6),
+              Text('Changer le mot de passe', style: AqsTypography.h2),
+              const SizedBox(height: AqsSpacing.s2),
+              Text(
+                'Mot de passe temporaire à remplacer (EF-83). Aucun volume d’eau.',
+                style: AqsTypography.bodySmall,
+              ),
+              const SizedBox(height: AqsSpacing.s6),
+              TextField(
+                controller: _actuel,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Mot de passe actuel'),
+              ),
+              const SizedBox(height: AqsSpacing.s4),
+              TextField(
+                controller: _nouveau,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Nouveau mot de passe'),
+              ),
+              const SizedBox(height: AqsSpacing.s6),
+              FilledButton(
+                onPressed: _enregistrer,
+                child: const Text('Enregistrer'),
+              ),
+              if (_message != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: AqsSpacing.s4),
+                  child: Text(_message!, style: TextStyle(color: AqsColors.statePanne)),
                 ),
             ],
           ),
@@ -176,16 +349,18 @@ class _EcranTerrainState extends State<EcranTerrain> {
                       },
                       child: const Text('Signaler'),
                     ),
-                    const SizedBox(height: AqsSpacing.s3),
-                    OutlinedButton(
-                      key: const Key('btn-intervention'),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const EcranIntervention()),
-                        );
-                      },
-                      child: const Text('Intervention affectée'),
-                    ),
+                    if (AqsScope.of(context).peutIntervention) ...[
+                      const SizedBox(height: AqsSpacing.s3),
+                      OutlinedButton(
+                        key: const Key('btn-intervention'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const EcranIntervention()),
+                          );
+                        },
+                        child: const Text('Intervention affectée'),
+                      ),
+                    ],
                     const SizedBox(height: AqsSpacing.s4),
                     for (final e in list)
                       ListTile(

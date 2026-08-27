@@ -1,5 +1,6 @@
 import 'package:aquasensus_mobile/api/api_client.dart';
 import 'package:aquasensus_mobile/ecrans/parcours.dart';
+import 'package:aquasensus_mobile/ecrans/presentation.dart';
 import 'package:aquasensus_mobile/session.dart';
 import 'package:aquasensus_mobile/sync/file_locale.dart';
 import 'package:aquasensus_mobile/theme/tokens.dart';
@@ -47,7 +48,7 @@ class _AquasensusAppState extends State<AquasensusApp> {
         title: 'AquaSensus',
         theme: AqsTheme.light(),
         darkTheme: AqsTheme.dark(),
-        home: const EcranConnexion(),
+        home: const EcranPresentation(),
       ),
     );
   }

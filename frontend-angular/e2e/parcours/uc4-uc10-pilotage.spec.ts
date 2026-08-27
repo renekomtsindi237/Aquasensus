@@ -10,14 +10,16 @@ test.describe('UC-4 / UC-6 / UC-10 — File, rétablissement, KPI (SQ7)', () => 
 
   test('UC-4 : interventions actives dans la file (pas de volume)', async ({ page }) => {
     await connecter(page);
+    await page.goto('/file');
     await expect(page.getByRole('heading', { name: 'Interventions actives' })).toBeVisible();
     await expect(page.getByText('AFFECTEE')).toBeVisible();
     await aucunChampVolume(page);
   });
 
-  test('UC-10 non passant : KPI sans jeton (403)', async ({ page }) => {
+  test('UC-10 non passant : KPI sans jeton redirige vers la connexion', async ({ page }) => {
     await page.goto('/kpi');
-    await expect(page.getByText(/kpi réservés/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/connexion/);
+    await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
   });
 
   test('UC-10 passant : agrégats, HORS_SERVICE exclu, budget', async ({ page }) => {
@@ -45,8 +47,9 @@ test.describe('UC-4 / UC-6 / UC-10 — File, rétablissement, KPI (SQ7)', () => 
     await expect(page.getByText(/canaux in-app.*aucun volume d.eau/i)).toBeVisible();
   });
 
-  test('UC-6 non passant : notifications anonymes', async ({ page }) => {
+  test('UC-6 non passant : notifications anonymes redirigent vers la connexion', async ({ page }) => {
     await page.goto('/notifications');
-    await expect(page.getByText(/connectez-vous pour voir les notifications/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/connexion/);
+    await expect(page.getByRole('heading', { name: 'Connexion' })).toBeVisible();
   });
 });

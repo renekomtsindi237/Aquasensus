@@ -299,7 +299,8 @@ Toutes les erreurs suivent le format RFC 7807 défini au §8.1 du cahier des cha
 | --- | --- |
 | Agrégat | `Utilisateur` porte ses rôles, son périmètre et son état de verrouillage |
 | Authentification | Jeton d'accès signé, durée 15 minutes ; jeton de rafraîchissement 7 jours, révocable, stocké haché |
-| Mot de passe | Hachage à coût mémoire élevé (Argon2id), paramètres configurables |
+| Inscription | `POST /auth/register` public : rôle `USAGER` uniquement, mot de passe choisi, `doitChangerMotDePasse = false` (pas de KYC) |
+| Mot de passe | Hachage à coût mémoire élevé (Argon2id), paramètres configurables ; premier accès d'un compte ADMIN : `doitChangerMotDePasse` (EF-83) |
 | Verrouillage | Compteur d'échecs consécutifs, verrouillage temporaire au 5ᵉ échec |
 | Périmètre | Objet valeur évalué à chaque appel, jamais mis en cache côté client |
 | Réinitialisation | Code à usage unique envoyé via le port de messagerie, réponse identique que le compte existe ou non |

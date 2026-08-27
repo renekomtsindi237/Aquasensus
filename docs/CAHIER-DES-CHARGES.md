@@ -672,6 +672,7 @@ Aucune table ne stocke de volume : le produit n'en collecte aucun (H-2).
 | Méthode | Chemin | Rôle minimal | Objet |
 | --- | --- | --- | --- |
 | POST | `/auth/login` | Public | Authentification |
+| POST | `/auth/register` | Public | Inscription usager (rôle `USAGER` uniquement, sans KYC) |
 | POST | `/auth/refresh` | Public (jeton) | Renouvellement |
 | POST | `/auth/password/reset-request` | Public | Code de réinitialisation (SMS simulé) |
 | GET | `/water-points` | Public (lecture réduite) | Liste filtrée et paginée |

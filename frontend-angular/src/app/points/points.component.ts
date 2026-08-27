@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { SessionService } from '../session.service';
 
 @Component({
   selector: 'app-points',
@@ -12,10 +13,14 @@ import { HttpClient } from '@angular/common/http';
       <p class="intro">Consultation publique — aucun volume n’est demandé.</p>
       <p>
         <a routerLink="/signaler">Signaler un incident</a>
-        ·
-        <a routerLink="/file">File de travail</a>
-        ·
-        <a routerLink="/">Connexion</a>
+        @if (session.peutFile()) {
+          ·
+          <a routerLink="/file">File de travail</a>
+        }
+        @if (!session.connecte()) {
+          ·
+          <a routerLink="/">Connexion</a>
+        }
       </p>
       @if (erreur) {
         <p class="erreur">{{ erreur }}</p>
@@ -45,6 +50,7 @@ import { HttpClient } from '@angular/common/http';
   `]
 })
 export class PointsComponent {
+  readonly session = inject(SessionService);
   points: PointPublic[] = [];
   erreur = '';
 

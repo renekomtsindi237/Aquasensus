@@ -70,3 +70,13 @@ button:disabled {
   padding: 0;
   font-weight: 600;
 }
+
+.onglets {
+  display: flex;
+  gap: var(--aqs-space-4);
+  margin: 0 0 var(--aqs-space-5);
+}
+
+.lien-btn.actif {
+  text-decoration: underline;
+}

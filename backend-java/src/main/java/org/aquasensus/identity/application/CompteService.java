@@ -51,6 +51,24 @@ public class CompteService {
         return sauve;
     }
 
+    /** Première connexion autonome : rôle USAGER uniquement, mot de passe choisi (pas de tempo EF-83). */
+    @Transactional
+    public Utilisateur inscrireUsager(String identifiant, String nomAffichage, String motDePasse) {
+        utilisateurs.parIdentifiant(identifiant).ifPresent(u -> {
+            throw new ConflitException("Un compte existe déjà pour cet identifiant.");
+        });
+        Utilisateur u = Utilisateur.nouveau(
+                identifiant,
+                encoder.encode(motDePasse),
+                nomAffichage,
+                Set.of(CodeRole.USAGER),
+                Set.of(),
+                false);
+        Utilisateur sauve = utilisateurs.enregistrer(u);
+        audit.enregistrer(sauve.id(), "INSCRIPTION", "UTILISATEUR", sauve.id().toString(), null, identifiant);
+        return sauve;
+    }
+
     @Transactional
     public Utilisateur patcher(UUID id, StatutCompte statut) {
         Utilisateur u = utilisateurs.parId(id).orElseThrow(RessourceIntrouvableException::new);

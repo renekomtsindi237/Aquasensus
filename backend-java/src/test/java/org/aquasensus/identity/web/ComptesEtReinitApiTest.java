@@ -1,5 +1,6 @@
 package org.aquasensus.identity.web;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -26,6 +27,34 @@ class ComptesEtReinitApiTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Test
+    void inscriptionUsagerPuisConflitIdentifiant() throws Exception {
+        mvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "identifiant": "nouvel.usager@aquasensus.local",
+                                  "nomAffichage": "Habitant Nkolbisson",
+                                  "motDePasse": "PremierAcces!2026"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.jetonAcces").isNotEmpty())
+                .andExpect(jsonPath("$.roles", hasItem("USAGER")))
+                .andExpect(jsonPath("$.doitChangerMotDePasse").value(false));
+
+        mvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "identifiant": "nouvel.usager@aquasensus.local",
+                                  "nomAffichage": "Doublon",
+                                  "motDePasse": "PremierAcces!2026"
+                                }
+                                """))
+                .andExpect(status().isConflict());
+    }
 
     @Test
     void adminCreeComptePuisResetSansEnumeration() throws Exception {

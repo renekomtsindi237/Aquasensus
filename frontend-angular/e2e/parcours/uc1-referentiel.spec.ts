@@ -26,7 +26,7 @@ test.describe('UC-1 — Consulter l’état d’un point d’eau', () => {
 
   test('non passant : import CSV sans authentification (403)', async ({ page }) => {
     await page.goto('/admin');
-    await expect(page.getByText(/réservé à l.administrateur/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/connexion/);
   });
 
   test('passant : import CSV d’ouvrages (admin)', async ({ page }) => {

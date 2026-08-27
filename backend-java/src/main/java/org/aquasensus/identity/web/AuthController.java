@@ -34,6 +34,13 @@ public class AuthController {
         return AuthReponse.depuis(authentification.connecter(requete.identifiant(), requete.motDePasse()));
     }
 
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthReponse inscrire(@Valid @RequestBody InscriptionRequete requete) {
+        return AuthReponse.depuis(
+                authentification.inscrire(requete.identifiant(), requete.nomAffichage(), requete.motDePasse()));
+    }
+
     @PostMapping("/refresh")
     public AuthReponse rafraichir(@Valid @RequestBody RafraichirRequete requete) {
         return AuthReponse.depuis(authentification.rafraichir(requete.jetonRafraichissement()));

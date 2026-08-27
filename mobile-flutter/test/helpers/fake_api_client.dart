@@ -54,9 +54,25 @@ class FakeApiClient implements ApiClient {
       }
       return _json(200, {
         'jetonAcces': 'e2e-mobile',
-        'roles': identifiant.contains('admin') ? ['ADMIN'] : ['TECHNICIEN'],
+        'roles': identifiant.contains('admin')
+            ? ['ADMIN']
+            : identifiant.contains('usager')
+                ? ['USAGER']
+                : ['TECHNICIEN'],
         'doitChangerMotDePasse': identifiant.contains('tempo'),
       });
+    }
+
+    if (path.endsWith('/auth/register')) {
+      return _json(201, {
+        'jetonAcces': 'e2e-mobile',
+        'roles': ['USAGER'],
+        'doitChangerMotDePasse': false,
+      });
+    }
+
+    if (path.endsWith('/auth/password/change')) {
+      return http.Response('', 204, headers: {'content-type': 'application/json'});
     }
 
     if (path.endsWith('/reports')) {

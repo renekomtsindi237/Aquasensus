@@ -25,7 +25,6 @@ describe('Accessibilité ISS-063', () => {
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('a.skip')?.getAttribute('href')).toBe('#contenu');
-    expect(el.querySelector('nav')?.getAttribute('aria-label')).toBe('Navigation principale');
   });
 
   it('axe-core sur le signalement', async () => {

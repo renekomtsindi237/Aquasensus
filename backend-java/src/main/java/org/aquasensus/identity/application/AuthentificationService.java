@@ -17,16 +17,19 @@ public class AuthentificationService {
     private final PasswordEncoder passwordEncoder;
     private final EmetteurJetons emetteurJetons;
     private final EnregistrementEchecConnexion echecsConnexion;
+    private final CompteService comptes;
 
     public AuthentificationService(
             UtilisateurRepository utilisateurs,
             PasswordEncoder passwordEncoder,
             EmetteurJetons emetteurJetons,
-            EnregistrementEchecConnexion echecsConnexion) {
+            EnregistrementEchecConnexion echecsConnexion,
+            CompteService comptes) {
         this.utilisateurs = utilisateurs;
         this.passwordEncoder = passwordEncoder;
         this.emetteurJetons = emetteurJetons;
         this.echecsConnexion = echecsConnexion;
+        this.comptes = comptes;
     }
 
     @Transactional
@@ -49,6 +52,12 @@ public class AuthentificationService {
 
         utilisateur.enregistrerSucces();
         utilisateurs.enregistrer(utilisateur);
+        return emetteurJetons.emettre(utilisateur);
+    }
+
+    @Transactional
+    public JetonAuthentification inscrire(String identifiant, String nomAffichage, String motDePasse) {
+        Utilisateur utilisateur = comptes.inscrireUsager(identifiant.trim(), nomAffichage.trim(), motDePasse);
         return emetteurJetons.emettre(utilisateur);
     }
 

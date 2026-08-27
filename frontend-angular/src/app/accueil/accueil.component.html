@@ -1,0 +1,155 @@
+<main class="dash">
+  @if (erreur) {
+    <p class="erreur" role="alert">{{ erreur }}</p>
+  }
+
+  @switch (role) {
+    @case ('USAGER') {
+      <header class="titre">
+        <h1>Mon quartier</h1>
+        <p>Signalez en moins d’une minute. Aucun volume d’eau n’est demandé.</p>
+      </header>
+      <a class="cta-usager" routerLink="/signaler">Signaler un incident</a>
+      <section class="carte-liste">
+        <h2>Ouvrages autour de vous</h2>
+        <ul>
+          @for (p of points; track p.code) {
+            <li>
+              <strong>{{ p.code }}</strong> — {{ p.nomUsage }}
+              <span>{{ p.etat }}</span>
+            </li>
+          }
+        </ul>
+        <p><a routerLink="/carte">Voir la carte</a> · <a routerLink="/points">Toute la liste</a></p>
+      </section>
+    }
+    @case ('TECHNICIEN') {
+      <header class="titre">
+        <h1>Journée terrain</h1>
+        <p>Interventions affectées et ouvrages du périmètre — pas de tableau de bord institutionnel.</p>
+      </header>
+      <div class="actions-tech">
+        <a class="tuile" routerLink="/signaler">Nouveau constat</a>
+        <a class="tuile tuile-ocre" routerLink="/points">Tournée des points</a>
+      </div>
+      <section class="table-card">
+        <h2>Ouvrages à connaître</h2>
+        <table>
+          <thead>
+            <tr><th>Code</th><th>Usage</th><th>État</th></tr>
+          </thead>
+          <tbody>
+            @for (p of points; track p.code) {
+              <tr>
+                <td>{{ p.code }}</td>
+                <td>{{ p.nomUsage }}</td>
+                <td>{{ p.etat }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+    @case ('DELEGUE') {
+      <header class="titre">
+        <h1>File du comité</h1>
+        <p>Qualifier, affecter, rétablir. Le temps de rétablissement est le KPI n°1.</p>
+      </header>
+      <div class="kpis">
+        <article><p>À qualifier</p><strong>{{ file.signalementsAQualifier.length }}</strong></article>
+        <article><p>Interventions</p><strong>{{ file.interventionsActives.length }}</strong></article>
+        <article><p>Alertes</p><strong>{{ file.alertesActives.length }}</strong></article>
+      </div>
+      <a class="lien-file" routerLink="/file">Ouvrir la file complète</a>
+      <section class="table-card">
+        <h2>Signalements en attente</h2>
+        <table>
+          <thead>
+            <tr><th>Référence</th><th>Catégorie</th><th>Priorité</th></tr>
+          </thead>
+          <tbody>
+            @for (s of file.signalementsAQualifier; track s.id) {
+              <tr>
+                <td>{{ s.reference }}</td>
+                <td>{{ s.categorie }}</td>
+                <td>{{ s.priorite }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+      <section class="alertes">
+        <h2>Alertes à traiter</h2>
+        @for (a of file.alertesActives; track a.id) {
+          <article>
+            <strong>{{ a.typeRegle }}</strong>
+            <span>{{ a.niveau }}</span>
+            <p>{{ a.explication }}</p>
+          </article>
+        }
+      </section>
+    }
+    @case ('PARTENAIRE') {
+      <header class="titre">
+        <h1>Pilotage association / mairie</h1>
+        <p>Agrégats de rétablissement (EF-53). HORS_SERVICE hors disponibilité (RG-12). Aucun volume d’eau.</p>
+      </header>
+      @if (kpi) {
+        <div class="kpis">
+          <article><p>Rétablissement médian</p><strong>{{ minutes(kpi.retablissementMedianMinutes) }}</strong></article>
+          <article><p>Rétablissement P90</p><strong>{{ minutes(kpi.retablissementP90Minutes) }}</strong></article>
+          <article><p>Ouvrages suivis</p><strong>{{ kpi.ouvragesActifsHorsHorsService }}</strong></article>
+          <article><p>Taux d’anticipation</p><strong>{{ (kpi.tauxAnticipation * 100).toFixed(0) }} %</strong></article>
+        </div>
+        <section class="table-card">
+          <h2>Répartition par état</h2>
+          <ul class="barres">
+            @for (e of kpi.pointsParEtat | keyvalue; track e.key) {
+              <li>
+                <span>{{ e.key }}</span>
+                <span class="barre" [style.width.%]="(e.value / maxEtat()) * 100"></span>
+                <strong>{{ e.value }}</strong>
+              </li>
+            }
+          </ul>
+          <p class="note">{{ kpi.note }}</p>
+          <p><a routerLink="/kpi">Filtres, export CSV et PDF</a></p>
+        </section>
+      }
+    }
+    @case ('ADMIN') {
+      <header class="titre">
+        <h1>Pilotage plateforme</h1>
+        <p>Vue globale des comptes, du canal simulé et du parc. Aucun volume d’eau.</p>
+      </header>
+      <div class="kpis">
+        <article><p>Comptes</p><strong>{{ users.length }}</strong></article>
+        <article><p>Alertes actives</p><strong>{{ kpi?.alertesActives ?? '—' }}</strong></article>
+        <article><p>Interventions</p><strong>{{ kpi?.interventionsEnCours ?? file.interventionsActives.length }}</strong></article>
+        <article><p>À qualifier</p><strong>{{ file.signalementsAQualifier.length }}</strong></article>
+      </div>
+      <div class="raccourcis">
+        <a routerLink="/comptes">Comptes · créer, suspendre</a>
+        <a routerLink="/simulation">SMS / USSD simulés</a>
+        <a routerLink="/admin">Référentiels et import</a>
+        <a routerLink="/file">File opérationnelle</a>
+      </div>
+      <section class="table-card">
+        <h2>Comptes</h2>
+        <table>
+          <thead>
+            <tr><th>Identifiant</th><th>Statut</th></tr>
+          </thead>
+          <tbody>
+            @for (u of users; track u.identifiant) {
+              <tr>
+                <td>{{ u.identifiant }}</td>
+                <td>{{ u.statut }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  }
+</main>

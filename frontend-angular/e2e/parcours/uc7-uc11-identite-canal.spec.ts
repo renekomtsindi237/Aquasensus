@@ -9,7 +9,7 @@ test.describe('UC-8 / SQ1 — Identité et administration', () => {
   });
 
   test('non passant : identifiants invalides (401)', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/connexion');
     await page.getByLabel('Identifiant').fill('admin@aquasensus.local');
     await page.getByLabel('Mot de passe').fill('mauvais');
     await page.getByRole('button', { name: 'Entrer' }).click();
@@ -17,38 +17,62 @@ test.describe('UC-8 / SQ1 — Identité et administration', () => {
   });
 
   test('non passant : compte verrouillé (423)', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/connexion');
     await page.getByLabel('Identifiant').fill('verrouille@aquasensus.local');
     await page.getByLabel('Mot de passe').fill('ChangeMoi!2026');
     await page.getByRole('button', { name: 'Entrer' }).click();
     await expect(page.getByRole('status')).toContainText(/compte verrouillé/i);
   });
 
-  test('passant : mot de passe temporaire, pas de navigation (EF-83)', async ({ page }) => {
-    await page.goto('/');
+  test('passant : mot de passe temporaire, écran de changement (EF-83)', async ({ page }) => {
+    await page.goto('/connexion');
     await page.getByLabel('Identifiant').fill('tempo@aquasensus.local');
     await page.getByLabel('Mot de passe').fill('ChangeMoi!2026');
     await page.getByRole('button', { name: 'Entrer' }).click();
-    await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole('status')).toContainText(/mot de passe temporaire/i);
+    await expect(page).toHaveURL(/\/mot-de-passe/);
+    await expect(page.getByRole('heading', { name: 'Changer le mot de passe' })).toBeVisible();
   });
 
   test('reset : réponse univoque (pas d’énumération)', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/connexion');
     await page.getByLabel('Identifiant').fill('inconnu@aquasensus.local');
     await page.getByRole('button', { name: /mot de passe oublié/i }).click();
     await expect(page.getByRole('status')).toContainText(/si un compte correspond/i);
   });
 
-  test('usager : redirection liste, pas la file', async ({ page }) => {
+  test('usager : tableau de bord quartier, pas la file', async ({ page }) => {
     await connecter(page, 'habitant@aquasensus.local');
-    await expect(page).toHaveURL(/\/points/);
+    await expect(page).toHaveURL(/\/accueil/);
+    await expect(page.getByRole('heading', { name: 'Mon quartier' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'File' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Comptes' })).toHaveCount(0);
   });
 
-  test('technicien : accès points, pas admin', async ({ page }) => {
+  test('inscription usager : première connexion vers le tableau de bord', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Créer un compte' }).click();
+    await page.getByLabel('Identifiant du compte').fill('nouveau.habitant@quartier.local');
+    await page.getByLabel('Nom affiché').fill('Habitant quartier');
+    await page.getByLabel('Mot de passe (10 caractères min.)').fill('PremierAcces!2026');
+    await page.getByRole('button', { name: 'S’inscrire' }).click();
+    await expect(page).toHaveURL(/\/accueil/);
+    await expect(page.getByRole('heading', { name: 'Mon quartier' })).toBeVisible();
+  });
+
+  test('partenaire : accueil de pilotage', async ({ page }) => {
+    await connecter(page, 'partenaire@aquasensus.local');
+    await expect(page).toHaveURL(/\/accueil/);
+    await expect(page.getByRole('heading', { name: /pilotage association/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'File' })).toHaveCount(0);
+  });
+
+  test('technicien : journée terrain, pas admin', async ({ page }) => {
     await connecter(page, 'tech@aquasensus.local');
+    await expect(page).toHaveURL(/\/accueil/);
+    await expect(page.getByRole('heading', { name: 'Journée terrain' })).toBeVisible();
     await page.goto('/comptes');
-    await expect(page.getByText(/réservé à l.administrateur/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/accueil/);
+    await expect(page.getByRole('link', { name: 'Comptes' })).toHaveCount(0);
   });
 
   test('admin : création de compte', async ({ page }) => {
@@ -83,8 +107,10 @@ test.describe('UC-7 canal / SQ3–SQ4 — SMS et USSD simulés', () => {
   });
 
   test('non passant : console sans ADMIN', async ({ page }) => {
+    await connecter(page, 'tech@aquasensus.local');
     await page.goto('/simulation');
-    await expect(page.getByText(/journal inaccessible|administrateur/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/accueil/);
+    await expect(page.getByRole('link', { name: 'SMS/USSD' })).toHaveCount(0);
   });
 
   test('SQ3 passant : AQS CODE SYMPTOME', async ({ page }) => {

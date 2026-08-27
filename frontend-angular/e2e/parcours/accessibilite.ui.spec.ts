@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { intercepterApi } from '../helpers/api-mock';
+import { connecter } from '../helpers/session';
 
 const pagesCritiques = [
-  { path: '/', nom: 'connexion' },
+  { path: '/', nom: 'présentation' },
+  { path: '/connexion', nom: 'connexion' },
   { path: '/signaler', nom: 'signalement' },
   { path: '/points', nom: 'liste' },
   { path: '/file', nom: 'file délégué' },
@@ -14,7 +16,12 @@ test.describe('Accessibilité parcours critiques (QA-7, ENF-40)', () => {
   for (const ecran of pagesCritiques) {
     test(`axe-core : ${ecran.nom}`, async ({ page }) => {
       await intercepterApi(page);
-      await page.goto(ecran.path);
+      if (ecran.path === '/file') {
+        await connecter(page);
+        await page.goto('/file');
+      } else {
+        await page.goto(ecran.path);
+      }
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
         .disableRules(['color-contrast'])

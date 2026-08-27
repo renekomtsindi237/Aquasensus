@@ -13,7 +13,13 @@ class SessionTerrain extends ChangeNotifier {
   final FileLocale file;
   final Synchroniseur sync;
 
+  List<String> roles = const [];
+  bool doitChangerMotDePasse = false;
+
   bool get horsLigne => !api.enLigne;
+
+  bool get peutIntervention =>
+      roles.contains('TECHNICIEN') || roles.contains('DELEGUE') || roles.contains('ADMIN');
 
   void couperReseau() {
     api.enLigne = false;

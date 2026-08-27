@@ -4,6 +4,8 @@ import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
+  beforeEach(() => sessionStorage.clear());
+
   it('se crée', async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
