@@ -1,0 +1,51 @@
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+*.log
+
+# Plan de commits local (ne pas versionner)
+COMMITS-A-FAIRE.txt
+
+# Secrets
+.env
+!.env.example
+
+# Java
+backend-java/target/
+backend-java/.mvn/wrapper/maven-wrapper.jar.bak
+
+# Node
+frontend-angular/node_modules/
+frontend-angular/dist/
+frontend-angular/.angular/
+frontend-angular/playwright-report/
+frontend-angular/test-results/
+frontend-angular/blob-report/
+
+# Flutter
+mobile-flutter/.dart_tool/
+mobile-flutter/build/
+mobile-flutter/.flutter-plugins
+mobile-flutter/.flutter-plugins-dependencies
+mobile-flutter/ios/Pods/
+
+# Python
+data-python/.venv/
+data-python/__pycache__/
+**/__pycache__/
+*.pyc
+
+# Photos hors racine web (ISS-015)
+/data/
+backend-java/data/
+
+# Couvertures
+**/coverage/
+**/htmlcov/
+backend-java/.classpath
+backend-java/.project
+backend-java/.settings/
+infra/sauvegarde/dumps/
