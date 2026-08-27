@@ -37,7 +37,7 @@ Les fronts copient l’actif depuis `docs/design/` vers `assets/brand/` sans le 
 
 Plateforme collaborative et data-driven de **signalement + gestion + maintenance prédictive simple** des forages / mini-réseaux communautaires (Yaoundé périphérique, rural/semi-rural Cameroun). Objectif : éviter les pannes surprises qui privent des centaines de familles d’eau potable.
 
-Fibre : utilité publique (santé, corvée d’eau, cohésion). KPI n°1 : **temps de rétablissement**.
+Fibre : utilité publique (santé, corvée d’eau, cohésion). KPI n°1 : **temps de rétablissement**. **Deux piliers d’égale priorité** : génie logiciel (Java, API, RBAC, fronts) et ingénierie data (pipeline Python, indicateurs, règles explicables). Lakehouse = évolution, pas un bloqueur v1.
 
 ## Acteurs (RBAC)
 

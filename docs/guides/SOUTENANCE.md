@@ -11,7 +11,8 @@
 5. KPI + export CSV/PDF + budget indicatif (pas de nom de déclarant).
 6. Notifications in-app (`/notifications`) après un signalement grave.
 7. Admin : `/comptes`, `/admin` (CSV, pièces), `/simulation`.
-8. Arrêter le service `data` : le signalement continue (ENF-13).
+8. Arrêter le service `data` : le signalement continue (ENF-13) — le **génie logiciel** tient sans le pipeline.
+9. Rappeler le **pipeline data** : extraction interne, indice, règle explicable, tests Pytest (DA-11).
 
 Comptes démo : `admin@aquasensus.local` / mot de passe `.env` ; `delegue.a@…` / `DelegueA!2026`.
 

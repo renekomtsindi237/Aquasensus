@@ -5,7 +5,7 @@
 | Métadonnée | Valeur |
 | --- | --- |
 | Référence | AQS-CNC-001 |
-| Version | 1.1 |
+| Version | 1.2 |
 | Statut | Validé — entrée du développement |
 | Nature | Conception technique détaillée |
 | Document maître | `docs/CONTEXTE-AQUASENSUS.md` (bible) |
@@ -19,6 +19,7 @@
 | --- | --- | --- |
 | 1.0 | 2026-08-26 | Création : décisions d'architecture, conception des couches, persistance, API, sécurité, moteur prédictif, fronts, déploiement, tests |
 | 1.1 | 2026-08-26 | Alignement sur H-2 : le module `usage` (relevés) est remplacé par `charge` ; aucune table ni écran de volume |
+| 1.2 | 2026-08-27 | DA-11 : ingénierie data et génie logiciel sont deux piliers d'égale priorité |
 
 ---
 
@@ -141,6 +142,16 @@ Chaque décision structurante est consignée avec son contexte, ses alternatives
 | **Décision** | Angular et Flutter affichent, saisissent, mettent en file et synchronisent. Aucune règle de priorité, de corroboration, de transition ou de KPI n'y est calculée. |
 | **Justification** | Règle de la bible. Deux fronts multiplieraient une règle dupliquée par deux, avec dérive garantie. |
 | **Conséquences** | Les fronts peuvent effectuer des validations d'ergonomie (champ requis), jamais des validations métier faisant autorité. Le serveur revalide systématiquement. |
+
+### DA-11 — Ingénierie data et génie logiciel sont deux piliers, pas un décor
+
+| Rubrique | Contenu |
+| --- | --- |
+| **Contexte** | Le projet vise une valorisation académique et opérationnelle sur **deux** compétences. Réduire Python à un calcul collé au Java, ou Java à un simple « front d'API pour un notebook », fausse le produit. |
+| **Décision** | Le service `data-python` est un composant d'ingénierie data (ETL incrémental, préparation, indicateurs, règles, évaluation, tests). Le cœur Java reste le génie logiciel transactionnel (états, RBAC, REST public). Les deux sont livrés, testés et démontrables. |
+| **Alternatives** | Tout calculer en Java ; tout exposer en Python ; lakehouse dès la v1. |
+| **Justification** | Bible §3.0 ; ENF-13 (le logiciel survit sans le pipeline) ; ENF-15 (le pipeline est un livrable, pas un script). |
+| **Conséquences** | Contrat interne stable ; Pytest au même titre que JUnit ; pas de volume d'eau dans l'extraction ; lakehouse reporté à l'évolution. |
 
 ---
 
@@ -567,6 +578,8 @@ Le projet refuse explicitement le KYC lourd. La conception de sécurité doit do
 
 ## 8. Conception du service data Python
 
+Le service n'est pas un accessoire du backend : c'est le **livrable d'ingénierie data** (DA-11, ENF-15). Le génie logiciel Java n'y est pas recopié.
+
 ### 8.1 Structure
 
 ```
@@ -929,7 +942,7 @@ Des tests automatisés vérifient les règles structurelles, car une règle d'ar
 | Machines à états (4) | Services de domaine dédiés, transitions refusées en 422 | DA-07, §4 |
 | Idempotence d'origine client | En-tête, colonne unique, double filet | DA-06, §6.1 |
 | Corroboration | Service de domaine, index composé, verrouillage optimiste | §4.3, §5.3 |
-| Indicateurs et règles | Service Python, une classe par règle, registre | §8.2 |
+| Indicateurs et règles | Service Python, une classe par règle, registre | §8.2, DA-11 |
 | Explicabilité des alertes | Facteurs structurés, version de paramétrage figée | §4.6, §8.2 |
 | Confiance des données | Complétude du référentiel et profondeur d'historique, jamais une part de relevés imputés | §8.3 |
 | Canal comme attribut | Port de messagerie, adaptateurs interchangeables | DA-09, §9 |

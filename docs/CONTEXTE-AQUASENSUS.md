@@ -3,7 +3,7 @@
 **Nom :** AquaSensus  
 **Sous-titre :** Plateforme de suivi et de maintenance prédictive des forages communautaires  
 **Territoire cible :** Quartiers périphériques de Yaoundé, zones rurales et semi-rurales du Cameroun  
-**Nature :** Application multi-plateforme à impact social (génie logiciel + data + cloud)  
+**Nature :** Application multi-plateforme à impact social (**génie logiciel** et **ingénierie data**, plus cloud)  
 **Statut de ce fichier :** index canonique. Toute décision produit, métier ou technique doit rester cohérente avec ce document. En cas de conflit, **mettre à jour ce fichier** plutôt que d’improviser.
 
 ---
@@ -11,6 +11,8 @@
 ## 1. Identité et fibre sociale
 
 AquaSensus n’est pas un démonstrateur IoT ni un outil ministériel. C’est une **infrastructure logicielle légère, collaborative et data-driven** pour que les communautés gardent l’eau potable **avant** que la pompe lâche.
+
+Le projet **priorise deux ingénieries à parts égales** : le génie logiciel (système d’information fiable, sécurisé, utilisable sur le terrain) et l’ingénierie data (pipeline, qualité, indicateurs, prédiction explicable). Ni l’un ni l’autre n’est un décor de soutenance.
 
 **Oui : cette orientation utilité publique correspond à la fibre du projet.**  
 Le travail vise un impact concret (santé, temps des femmes et des enfants, cohésion de quartier), sans barrière administrative lourde, et une valorisation académique et humaine (jury, ONG, mairie).
@@ -48,26 +50,35 @@ Pas besoin de capteurs chers ni d’accords étatiques. La plateforme **collecte
 
 AquaSensus **ne collecte donc aucun volume**. L’usure d’usage est un proxy calculé à partir de données déjà connues : population desservie, temps écoulé depuis la dernière maintenance, saison.
 
-### 3.1 Côté data (certification / pipeline IBM-style)
+### 3.0 Deux piliers d’égale priorité
 
-Pipeline qui agrège :
+| Pilier | Question qu’il tranche | Ce qu’il refuse |
+| --- | --- | --- |
+| **Génie logiciel** | Comment un comité signale, décide et rétablit **sans perdre une saisie**, avec des rôles clairs et une API unique ? | Logique métier dans les fronts, sécurité bricolée, stack improvisée |
+| **Ingénierie data** | Comment **transformer** signalements, historiques et référentiel en indices et alertes **rejouables et explicables**, sans inventer un volume d’eau ? | Boîte noire ML, lakehouse comme prérequis v1, proxy de litres |
 
-- rapports d’incidents (observation humaine) ;
-- historique des pannes et des interventions par point d’eau ;
-- charge d’usage estimée (référentiel + calendrier saisonnier), jamais mesurée.
+Les deux piliers partagent le même KPI n°1 (temps de rétablissement) et la même contrainte H-2 (aucun volume).
+
+### 3.1 Côté data engineer (pipeline, pas un notebook)
+
+Chaîne **ETL / ELT légère**, de type certification data (contrat, incrémental, tests), pas un usine à gaz :
+
+1. **Extraire** (API interne Java, pagination, curseur d’horodatage) : signalements humains, interventions, fiches d’ouvrages, calendrier saisonnier.
+2. **Préparer** : déduplication, calendrier applicable, confiance selon la complétude (pas d’imputation d’un volume).
+3. **Calculer** : indicateurs `M`, `P`, `S`, `T`, indice de santé, règles R1–R5.
+4. **Publier** vers le cœur Java (indices, alertes avec facteurs).
+5. **Évaluer** a posteriori (anticipation, faux positifs) — le data engineer rend des comptes sur la qualité du moteur, pas seulement sur le run.
 
 Modèle **simple** (règles statistiques / séries temporelles, pas un usine à gaz ML) :
 
 > Exemple métier : « Ce forage a atteint 93 % de son échéance d’entretien pour 450 habitants desservis, dont 40 jours de saison sèche — risque de panne sous ~2 semaines, alerter le comité. »
 
-### 3.2 Côté génie logiciel (API et architecture)
+### 3.2 Côté génie logiciel (API, états, sécurité, interfaces)
 
-- API REST **propre et sécurisée** (cœur métier Java / Spring ; traitements data Python).
-- Signalement par habitants ou délégués : interface web **ultra-légère** (Angular PWA) et mobile (Flutter), plus **SMS/USSD simulé** (pas d’accord opérateur réel requis).
-- Tableau de bord associations / mairies d’arrondissement :
-  - carte de l’état de santé des points d’eau ;
-  - suivi des interventions techniciens ;
-  - **temps de rétablissement** (KPI social fort).
+- API REST **propre et sécurisée** (cœur métier Java / Spring ; le Python n’est **pas** exposé au public).
+- Machines à états, RBAC, idempotence, file hors ligne — le logiciel **tient** même si le pipeline data est arrêté (ENF-13).
+- Signalement : PWA Angular et mobile Flutter, plus **SMS/USSD simulé**.
+- Tableaux de bord par rôle : carte, file, KPI de rétablissement — consommation d’API uniquement.
 
 ### 3.3 Côté cloud / DevOps
 
@@ -141,17 +152,17 @@ Le pitch peut citer FastAPI comme *idée* d’API légère. **L’implémentatio
 | Lakehouse (évolution) | Iceberg / Delta sur object storage — logs, rapports, flux semi-structurés |
 | Exécution | Linux, Docker, reproductible ONG/mairie |
 
-**Séparation des responsabilités :**
+**Séparation des responsabilités (les deux piliers) :**
 
-- Java : transactions métier, utilisateurs, sécurité, exposition REST vers les fronts.
-- Python : ETL, analytics, interactions lakehouse, modèles prédictifs simples.
+- **Génie logiciel (Java + fronts)** : transactions, utilisateurs, sécurité, machines à états, exposition REST, UX terrain.
+- **Ingénierie data (Python)** : extraction incrémentale, préparation, indicateurs, indice, règles, évaluation, (évolution) lakehouse.
 - Angular / Flutter : consommation des API REST uniquement (pas de logique métier dupliquée).
 
 ---
 
 ## 8. Qualité et conventions
 
-- TDD : toute feature s’accompagne de tests (JUnit/Mockito + `@SpringBootTest` ; Pytest + TestClient ; tests Angular ; widget/unit Flutter).
+- TDD : toute feature s’accompagne de tests (JUnit/Mockito + `@SpringBootTest` ; Pytest + TestClient ; tests Angular ; widget/unit Flutter). Le pipeline data n’est pas exempté.
 - Migrations Flyway propres, sans casser les contraintes existantes.
 - Typage strict, modules clairs, APIs documentées (contrat inter-services).
 - Prédiction : **interprétable** (règle, seuil, fenêtre temporelle) — un comité doit pouvoir comprendre l’alerte.
@@ -191,7 +202,7 @@ Aucun autre fichier ne représente la marque. Les fronts copient l’actif depui
 
 1. **Impact social direct** : moins de pannes surprises, réparations mieux ciblées.
 2. **Peu de barrières** : pas d’API bancaire ni d’opérateur ; données simulables ou de terrain proche.
-3. **Valorisation** : santé publique + accès à l’eau + ingénierie data et logiciel.
+3. **Valorisation** : santé publique + accès à l’eau + **double compétence** génie logiciel et ingénierie data.
 
 ---
 
