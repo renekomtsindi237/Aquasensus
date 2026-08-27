@@ -1,0 +1,69 @@
+@startuml SQ1-authentification
+!include ../_style.puml
+
+title Séquence - Authentification et contrôle d'accès (EF-80, EF-85, ENF-22)
+
+autonumber "<b>[00]"
+
+actor "Utilisateur" as U
+participant "Front\n(Angular / Flutter)" as APP
+participant "AuthController" as AUTH
+participant "UtilisateurService" as SVC
+participant "PolitiqueAcces" as ACL
+database "PostgreSQL" as DB
+participant "MessagingGateway\n(simulé)" as GW
+
+U -> APP : identifiant + mot de passe
+APP -> AUTH : POST /auth/login
+AUTH -> SVC : authentifier(identifiant, motDePasse)
+SVC -> DB : charger l'utilisateur, ses rôles\net son périmètre
+
+alt Compte verrouillé
+  SVC --> AUTH : CompteVerrouilleException
+  AUTH --> APP : 423 + délai de déverrouillage
+else Mot de passe invalide
+  SVC -> DB : incrémenter les échecs consécutifs
+  alt 5e échec
+    SVC -> DB : verrouiller le compte
+  end
+  SVC --> AUTH : IdentifiantsInvalidesException
+  AUTH --> APP : 401 (message générique)
+else Authentification réussie
+  SVC -> DB : réinitialiser le compteur d'échecs
+  SVC -> SVC : émettre le jeton d'accès (15 min)\net le jeton de rafraîchissement (7 j)
+  SVC --> AUTH : jetons + profil
+  AUTH --> APP : 200 + jetons
+  alt Changement de mot de passe imposé
+    APP -> U : écran de changement obligatoire
+  end
+end
+
+== Appel métier ultérieur ==
+
+APP -> AUTH : GET /interventions\nAuthorization: Bearer ...
+AUTH -> ACL : vérifier rôle et périmètre
+ACL -> DB : périmètre de l'utilisateur
+alt Rôle insuffisant ou hors périmètre
+  ACL --> AUTH : AccesRefuseException
+  AUTH -> DB : journaliser la tentative
+  AUTH --> APP : 403
+else Autorisé
+  ACL --> AUTH : ok
+  AUTH --> APP : 200 + données du périmètre
+end
+
+== Mot de passe oublié ==
+
+U -> APP : « mot de passe oublié »
+APP -> AUTH : POST /auth/password/reset-request
+AUTH -> SVC : générer un code à usage unique
+SVC -> GW : envoyer le code (SMS simulé)
+GW -> U : « AquaSensus: code 4821, valable 10 min. »
+AUTH --> APP : 202 (réponse identique\nque le compte existe ou non)
+
+note over AUTH, ACL
+  L'autorisation est toujours vérifiée côté serveur.
+  Les fronts masquent des écrans, ils ne protègent rien.
+end note
+
+@enduml

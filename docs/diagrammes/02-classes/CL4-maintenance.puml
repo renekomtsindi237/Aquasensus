@@ -1,0 +1,126 @@
+@startuml CL4-maintenance
+!include ../_style.puml
+
+title Domaine « maintenance » - Interventions et rétablissement
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+class Intervention <<AggregateRoot>> {
+  -id : UUID
+  -reference : String
+  -pointEauId : UUID
+  -type : TypeIntervention
+  -origine : OrigineIntervention
+  -alerteId : UUID
+  -technicienId : UUID
+  -statut : StatutIntervention
+  -echeanceSouhaitee : LocalDate
+  -motifSuspension : MotifSuspension
+  -interventionOrigineId : UUID
+  --
+  +affecter(technicien, echeance) : void
+  +demarrer() : void
+  +suspendre(MotifSuspension) : void
+  +declarerRealisee(CompteRendu) : void
+  +cloturer(confirmateur) : DureeRetablissement
+  +rouvrir(motif) : Intervention
+  +transitionAutorisee(StatutIntervention) : boolean
+}
+
+class CompteRendu <<ValueObject>> {
+  -diagnostic : String
+  -causeRacine : String
+  -actions : String
+  -dureeImmobilisation : Duration
+  --
+  +estComplet() : boolean
+}
+
+class PieceRemplacee <<Entity>> {
+  -reference : String
+  -libelle : String
+  -quantite : int
+  -coutUnitaire : Montant
+  --
+  +coutTotal() : Montant
+}
+
+class JalonIntervention <<Entity>> {
+  -statut : StatutIntervention
+  -horodatage : Instant
+  -auteurId : UUID
+  -commentaire : String
+}
+
+class DureeRetablissement <<ValueObject>> {
+  -debut : Instant
+  -fin : Instant
+  -minutes : long
+  --
+  +format() : String
+}
+
+class DossierPreparation <<ValueObject>> {
+  -symptomesCorrobores : List<String>
+  -historiquePannes : List<String>
+  -piecesDejaPosees : List<String>
+  -accesTerrain : String
+}
+
+package "Énumérations" {
+  enum TypeIntervention {
+    CORRECTIVE
+    PREVENTIVE
+    INSPECTION
+  }
+
+  enum OrigineIntervention {
+    SIGNALEMENT
+    ALERTE
+    MANUELLE
+  }
+
+  enum StatutIntervention {
+    OUVERTE
+    AFFECTEE
+    EN_COURS
+    SUSPENDUE
+    REALISEE
+    CLOTUREE
+    ANNULEE
+  }
+
+  enum MotifSuspension {
+    PIECE_INDISPONIBLE
+    FINANCEMENT_EN_ATTENTE
+    ACCES_IMPOSSIBLE
+    METEO
+  }
+}
+
+Intervention "1" *-down- "0..1" CompteRendu
+Intervention "1" *-down- "0..*" PieceRemplacee
+Intervention "1" *-down- "1..*" JalonIntervention
+Intervention "1" *-left- "0..1" DureeRetablissement
+Intervention "1" .down.> "1" DossierPreparation : produit
+Intervention "0..1" --> "0..1" Intervention : réouverture de
+Intervention -right-> TypeIntervention
+Intervention -right-> OrigineIntervention
+Intervention -right-> StatutIntervention
+Intervention -right-> MotifSuspension
+
+note bottom of Intervention
+  cloturer() exige un confirmateur distinct
+  du technicien et un CompteRendu complet
+  (RG-04, RG-05).
+end note
+
+note right of DureeRetablissement
+  Mesurée depuis le premier signalement
+  rattaché, pas depuis l'ouverture
+  de l'intervention.
+end note
+
+@enduml

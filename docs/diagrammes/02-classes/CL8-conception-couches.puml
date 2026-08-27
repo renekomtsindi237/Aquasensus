@@ -1,0 +1,98 @@
+@startuml CL8-conception-couches
+!include ../_style.puml
+
+title Vue de conception - Couches et ports du module « maintenance »
+
+hide circle
+skinparam nodesep 24
+skinparam ranksep 55
+
+package "Présentation (Spring MVC)" {
+  class InterventionController <<RestController>> {
+    +ouvrir(OuvrirInterventionRequest) : InterventionResponse
+    +transiter(UUID, TransitionRequest) : InterventionResponse
+    +consignerCompteRendu(UUID, CompteRenduRequest) : void
+    +briefing(UUID) : DossierPreparationResponse
+  }
+  class InterventionMapper <<Mapper>> {
+    +versDto(Intervention) : InterventionResponse
+    +versCommande(TransitionRequest) : TransiterCommande
+  }
+  class GestionnaireErreurs <<ControllerAdvice>> {
+    +regleMetierViolee(...) : ProblemDetail
+    +accesRefuse(...) : ProblemDetail
+  }
+}
+
+package "Application" {
+  class InterventionService <<ApplicationService>> {
+    +ouvrir(OuvrirCommande) : Intervention
+    +affecter(UUID, UUID technicien) : void
+    +transiter(TransiterCommande) : Intervention
+    +cloturer(UUID, UUID confirmateur) : DureeRetablissement
+  }
+  class PolitiqueAcces <<ApplicationService>> {
+    +verifierPerimetre(Utilisateur, PointEau) : void
+  }
+  class PublicateurEvenements <<Port>> {
+    +publier(EvenementMetier) : void
+  }
+}
+
+package "Domaine" {
+  class Intervention <<AggregateRoot>>
+  class MachineEtatsIntervention <<DomainService>> {
+    +transitionsAutorisees(StatutIntervention) : Set<StatutIntervention>
+    +verifier(Intervention, StatutIntervention) : void
+  }
+  class CalculRetablissement <<DomainService>> {
+    +calculer(Intervention, List<Signalement>) : DureeRetablissement
+  }
+  interface InterventionRepository <<Port>> {
+    +parId(UUID) : Optional<Intervention>
+    +parPointEau(UUID, StatutIntervention) : List<Intervention>
+    +enregistrer(Intervention) : Intervention
+  }
+}
+
+package "Infrastructure" {
+  class InterventionRepositoryJpa <<Adapter>> {
+    -entityManager : EntityManager
+  }
+  class InterventionEntity <<Entity JPA>>
+  class NotificationAdapter <<Adapter>> {
+    -gateway : MessagingGateway
+  }
+  class MigrationsFlyway <<Migration SQL>> {
+    V3__interventions.sql
+    V7__temps_retablissement.sql
+  }
+}
+
+InterventionController --> InterventionService
+InterventionController --> InterventionMapper
+InterventionService --> InterventionRepository
+InterventionService --> MachineEtatsIntervention
+InterventionService --> CalculRetablissement
+InterventionService --> PolitiqueAcces
+InterventionService --> PublicateurEvenements
+InterventionService --> Intervention
+InterventionRepository <|.. InterventionRepositoryJpa
+InterventionRepositoryJpa --> InterventionEntity
+InterventionRepositoryJpa ..> MigrationsFlyway : schéma géré par
+PublicateurEvenements <|.. NotificationAdapter
+
+note bottom of InterventionRepository
+  Le domaine définit le port,
+  l'infrastructure fournit l'adaptateur :
+  aucune annotation de persistance
+  dans les classes métier.
+end note
+
+note right of MigrationsFlyway
+  Le schéma n'est jamais généré par l'ORM :
+  scripts SQL versionnés, joués au démarrage
+  (MD-1, règle de la bible).
+end note
+
+@enduml

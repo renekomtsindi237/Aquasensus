@@ -1,0 +1,52 @@
+@startuml UC4-charge-saisonnalite
+!include ../_style.puml
+
+title Module M4 - Charge d'usage et saisonnalité
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Délégué" as DELEGUE
+actor "Technicien" as TECH
+actor "Partenaire" as PARTENAIRE
+actor "Administrateur" as ADMIN
+actor "Traitement\nquotidien" as SYS <<système>>
+
+rectangle "M4 - Charge d'usage" {
+  usecase "EF-30\nCalculer la charge cumulée\ndepuis la dernière maintenance" as U30
+  usecase "EF-31\nPondérer les jours par\nle coefficient saisonnier" as U31
+  usecase "EF-32\nDéterminer l'intervalle\nde maintenance effectif" as U32
+  usecase "EF-33\nFixer manuellement un intervalle\n(préconisation constructeur)" as U33
+  usecase "EF-34\nConsulter la charge\net l'échéance prévue" as U34
+  usecase "EF-35\nSignaler un référentiel\nincomplet" as U35
+  usecase "Paramétrer le\ncalendrier saisonnier" as U36
+}
+
+SYS --> U30
+SYS --> U35
+ADMIN --> U33
+ADMIN --> U36
+DELEGUE --> U34
+TECH --> U34
+PARTENAIRE --> U34
+
+U30 ..> U31 : <<include>>
+U30 ..> U32 : <<include>>
+U31 ..> U36 : <<include>>
+U33 ..> U32 : <<extend>>
+U34 ..> U30 : <<include>>
+U35 ..> U30 : <<extend>>
+
+note bottom of U30
+  Aucun acteur humain ne saisit quoi que ce soit :
+  le volume consommé est inconnaissable (H-2).
+  Tout se déduit du référentiel et du calendrier.
+end note
+
+note bottom of U34
+  L'écran dit « estimation », jamais « mesure »,
+  et n'affiche aucun volume en litres.
+end note
+
+@enduml

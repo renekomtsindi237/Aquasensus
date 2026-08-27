@@ -1,0 +1,45 @@
+@startuml UC1-referentiel
+!include ../_style.puml
+
+title Module M1 - Référentiel des points d'eau
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Habitant" as USAGER
+actor "Délégué" as DELEGUE
+actor "Partenaire" as PARTENAIRE
+actor "Administrateur" as ADMIN
+
+rectangle "M1 - Référentiel" {
+  usecase "EF-01\nCréer / modifier / désactiver\nun point d'eau" as U01
+  usecase "EF-02\nRattacher à une localité\n(région → commune → quartier)" as U02
+  usecase "EF-03\nConsulter la fiche\npublique d'un ouvrage" as U03
+  usecase "EF-04\nHistoriser un\nchangement d'état" as U04
+  usecase "EF-05\nImporter un lot\nde points d'eau (CSV)" as U05
+  usecase "EF-06\nJoindre des photos\nà la fiche" as U06
+  usecase "EF-07\nRechercher et filtrer\nles points d'eau" as U07
+}
+
+ADMIN --> U01
+ADMIN --> U05
+ADMIN --> U06
+DELEGUE --> U06
+USAGER --> U03
+USAGER --> U07
+PARTENAIRE --> U07
+PARTENAIRE --> U03
+
+U01 ..> U02 : <<include>>
+U01 ..> U04 : <<include>>
+U05 ..> U01 : <<include>>
+U03 ..> U04 : <<include>>
+
+note bottom of U01
+  Suppression toujours logique (RG-13) :
+  l'historique de l'ouvrage est
+  sa mémoire technique.
+end note
+
+@enduml

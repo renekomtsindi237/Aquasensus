@@ -1,0 +1,120 @@
+@startuml CL2-referentiel
+!include ../_style.puml
+
+title Domaine « registry » - Localités, comités et points d'eau
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+class PointEau <<AggregateRoot>> {
+  -id : UUID
+  -code : String
+  -nomUsage : String
+  -type : TypePointEau
+  -position : Coordonnees
+  -dateMiseEnService : LocalDate
+  -profondeurM : BigDecimal
+  -debitNominalLMin : BigDecimal
+  -populationDesservie : Integer
+  -intervalleMaintenanceJours : Integer
+  -etat : EtatPointEau
+  -actif : boolean
+  --
+  +changerEtat(EtatPointEau, motif, auteur) : HistoriqueEtat
+  +estDisponible() : boolean
+  +referentielComplet() : boolean
+  +desactiver(motif) : void
+}
+
+class HistoriqueEtat <<Entity>> {
+  -etatPrecedent : EtatPointEau
+  -etatNouveau : EtatPointEau
+  -motif : String
+  -auteurId : UUID
+  -survenuLe : Instant
+}
+
+class Localite <<AggregateRoot>> {
+  -id : UUID
+  -code : String
+  -nom : String
+  -niveau : NiveauLocalite
+  --
+  +cheminComplet() : String
+}
+
+class Comite <<AggregateRoot>> {
+  -id : UUID
+  -nom : String
+  -telephoneContact : Telephone
+  -actif : boolean
+  --
+  +delegues() : List<UUID>
+}
+
+class Coordonnees <<ValueObject>> {
+  -latitude : BigDecimal
+  -longitude : BigDecimal
+  --
+  +distanceMetres(Coordonnees) : double
+  +dansEmprise(Emprise) : boolean
+}
+
+class PieceJointe <<Entity>> {
+  -nomStocke : String
+  -typeMime : String
+  -tailleOctets : long
+  -deposeeLe : Instant
+}
+
+package "Énumérations" {
+  enum TypePointEau {
+    FORAGE_MANUEL
+    FORAGE_MOTORISE
+    MINI_RESEAU
+    BORNE_FONTAINE
+  }
+
+  enum EtatPointEau {
+    OPERATIONNEL
+    SOUS_SURVEILLANCE
+    RISQUE_ELEVE
+    EN_PANNE
+    EN_REPARATION
+    HORS_SERVICE
+  }
+
+  enum NiveauLocalite {
+    REGION
+    COMMUNE
+    QUARTIER
+  }
+}
+
+Localite "1" o-up- "0..*" Localite : parent
+Localite "1" *-down- "0..*" PointEau
+Comite "1" *-down- "0..*" PointEau
+PointEau "1" *-down- "0..*" HistoriqueEtat
+PointEau "1" *-left- "1" Coordonnees
+PointEau "1" *-down- "0..*" PieceJointe
+PointEau -right-> TypePointEau
+PointEau -right-> EtatPointEau
+Localite -right-> NiveauLocalite
+
+note bottom of PointEau
+  populationDesservie et dateMiseEnService
+  sont les seules entrées de la charge d'usage
+  estimée (EF-30) : leur absence dégrade
+  la confiance de l'indice (RG-08).
+  intervalleMaintenanceJours n'est renseigné
+  qu'en cas de préconisation constructeur.
+end note
+
+note right of HistoriqueEtat
+  Tout changement d'état est tracé :
+  c'est la matière première du KPI
+  de continuité d'accès (EF-04).
+end note
+
+@enduml

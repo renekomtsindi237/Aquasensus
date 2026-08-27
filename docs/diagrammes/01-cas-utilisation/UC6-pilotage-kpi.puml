@@ -1,0 +1,46 @@
+@startuml UC6-pilotage-kpi
+!include ../_style.puml
+
+title Module M6 - Carte, tableau de bord et pilotage
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Habitant" as USAGER
+actor "Délégué" as DELEGUE
+actor "Partenaire\n(ONG / mairie)" as PARTENAIRE
+actor "Administrateur" as ADMIN
+
+rectangle "M6 - Restitution" {
+  usecase "EF-50\nConsulter la carte\ndes points d'eau" as U50
+  usecase "EF-51\nOuvrir la fiche\ndepuis un marqueur" as U51
+  usecase "EF-52\nFiltrer la carte\n(état, indice, comité)" as U52
+  usecase "EF-53\nConsulter le tableau\nde bord KPI" as U53
+  usecase "EF-54\nFiltrer et comparer\ndeux périodes" as U54
+  usecase "EF-55\nExporter en CSV\nou générer un rapport PDF" as U55
+  usecase "EF-56\nConsulter la file\nde travail du comité" as U56
+}
+
+USAGER --> U50
+USAGER --> U51
+DELEGUE --> U56
+DELEGUE --> U55
+PARTENAIRE --> U53
+PARTENAIRE --> U54
+PARTENAIRE --> U55
+ADMIN --> U53
+
+U50 ..> U52 : <<include>>
+U50 ..> U51 : <<extend>>
+U53 ..> U54 : <<include>>
+U55 ..> U54 : <<include>>
+U56 ..> U52 : <<include>>
+
+note bottom of U53
+  KPI obligatoires : temps de rétablissement
+  (médiane et P90), répartition des états,
+  alertes actives, délai comité → technicien.
+end note
+
+@enduml

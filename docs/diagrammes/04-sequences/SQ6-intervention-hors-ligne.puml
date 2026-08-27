@@ -1,0 +1,76 @@
+@startuml SQ6-intervention-hors-ligne
+!include ../_style.puml
+
+title Séquence - Intervention terrain hors ligne et resynchronisation (EF-95 à EF-99)
+
+autonumber "<b>[00]"
+
+actor "Technicien" as T
+participant "Application Flutter" as APP
+participant "File locale\n(SQLite)" as FILE
+participant "InterventionController" as IC
+participant "InterventionService" as INT
+participant "MachineEtats" as ME
+database "PostgreSQL" as DB
+
+== Avant le départ (réseau disponible) ==
+
+T -> APP : synchronise son périmètre
+APP -> IC : GET /interventions?technicien=moi
+IC --> APP : interventions affectées + dossiers
+APP -> FILE : mettre en cache local
+
+== Sur le terrain (hors ligne) ==
+
+T -> APP : démarre l'intervention
+APP -> FILE : transition EN_COURS (EN_ATTENTE, uuidClient)
+APP --> T : « 1 élément à envoyer »
+
+T -> APP : saisit diagnostic, cause racine, actions
+APP -> FILE : compte rendu (EN_ATTENTE, uuidClient)
+
+T -> APP : ajoute les pièces remplacées
+APP -> FILE : pièces (EN_ATTENTE, uuidClient)
+
+T -> APP : déclare l'intervention réalisée
+APP -> APP : vérifier localement\nque le compte rendu est complet
+alt Compte rendu incomplet
+  APP --> T : « Diagnostic et action requis\navant de déclarer réalisée »
+else Complet
+  APP -> FILE : transition REALISEE (EN_ATTENTE)
+  APP --> T : « 4 éléments seront envoyés\ndès le retour du réseau »
+end
+
+== Retour du réseau ==
+
+APP -> FILE : lire la file dans l'ordre FIFO
+
+loop pour chaque élément en attente
+  APP -> IC : requête + X-Client-Request-Id
+  IC -> INT : appliquer la commande
+  INT -> ME : transition autorisée ?
+  alt Transition invalide (état serveur différent)
+    ME --> INT : refus
+    INT --> IC : RegleMetierException
+    IC --> APP : 422 + explication
+    APP -> FILE : marquer EN_CONFLIT\net conserver la version locale
+    APP --> T : signaler le conflit et l'état serveur
+  else Requête déjà traitée
+    INT --> IC : ressource existante
+    IC --> APP : 200
+    APP -> FILE : marquer ENVOYE
+  else Appliquée
+    INT -> DB : enregistrer + jalon horodaté
+    IC --> APP : 200 / 201
+    APP -> FILE : marquer ENVOYE
+  end
+end
+
+APP --> T : « Tout est synchronisé »
+
+note over FILE
+  Rien n'est purgé de la file locale
+  avant confirmation du serveur (ENF-12).
+end note
+
+@enduml

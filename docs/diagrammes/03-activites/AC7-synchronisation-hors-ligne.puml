@@ -1,0 +1,72 @@
+@startuml AC7-synchronisation-hors-ligne
+!include ../_style.puml
+
+title Activité - File locale et synchronisation hors ligne (EF-95 à EF-99)
+
+|#EFF8FC|Application (PWA / Flutter)|
+|#EEF2F6|API AquaSensus|
+
+|Application (PWA / Flutter)|
+start
+:Saisie utilisateur
+(signalement, compte rendu, transition);
+:Générer un uuidClient
+et horodater localement;
+:Écrire dans la file locale
+persistante (statut EN_ATTENTE);
+:Afficher l'élément
+avec son état de synchronisation;
+
+if (Réseau disponible ?) then ([non])
+  :Afficher le bandeau
+  « Hors ligne — N éléments à envoyer »;
+  :Attendre l'événement
+  de reconnexion;
+else ([oui])
+endif
+
+repeat :Pour chaque élément en attente (ordre FIFO);
+
+  :Envoyer avec l'en-tête
+  X-Client-Request-Id;
+
+  |API AquaSensus|
+  if (uuidClient déjà enregistré ?) then ([oui])
+    :Retourner la ressource existante
+    (200, pas de création);
+  else ([non])
+    :Créer la ressource;
+    :Retourner 201;
+  endif
+
+  |Application (PWA / Flutter)|
+  if (Réponse reçue ?) then ([non])
+    #FEF3DC:Conserver en file,
+    replanifier avec temporisation
+    croissante;
+  else ([oui])
+    if (Conflit métier détecté ?) then ([oui])
+      #FCEAEA:Marquer EN_CONFLIT;
+      :Conserver la version locale
+      dans le journal;
+      :Appliquer la version serveur
+      et informer l'utilisateur;
+    else ([non])
+      #E6F4EC:Marquer ENVOYE
+      et purger de la file;
+    endif
+  endif
+
+repeat while (Éléments restants ?) is ([oui]) not ([non])
+
+:Mettre à jour le compteur
+et masquer le bandeau;
+stop
+
+note right
+  Aucune saisie terrain ne peut être perdue
+  silencieusement : l'état de synchronisation
+  est toujours visible (EF-98, ENF-12).
+end note
+
+@enduml

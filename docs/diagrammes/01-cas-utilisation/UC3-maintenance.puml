@@ -1,0 +1,50 @@
+@startuml UC3-maintenance
+!include ../_style.puml
+
+title Module M3 - Interventions et maintenance
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Délégué" as DELEGUE
+actor "Technicien" as TECH
+actor "Partenaire" as PARTENAIRE
+
+rectangle "M3 - Maintenance" {
+  usecase "EF-20\nOuvrir une intervention\n(signalement, alerte ou manuelle)" as U20
+  usecase "EF-21\nAffecter un technicien\net une échéance" as U21
+  usecase "EF-22\nFaire évoluer le statut\n(machine à états)" as U22
+  usecase "EF-23\nConsigner le compte rendu\ntechnique et les pièces" as U23
+  usecase "EF-24\nConfirmer le rétablissement\n(second acteur)" as U24
+  usecase "EF-25\nCalculer le temps\nde rétablissement" as U25
+  usecase "EF-26\nConsulter le dossier\nde préparation" as U26
+  usecase "EF-27\nSuivre le budget\nde l'intervention" as U27
+  usecase "EF-28\nRouvrir en cas\nde récidive (15 j)" as U28
+}
+
+DELEGUE --> U20
+DELEGUE --> U21
+DELEGUE --> U24
+DELEGUE --> U27
+DELEGUE --> U28
+TECH --> U22
+TECH --> U23
+TECH --> U26
+PARTENAIRE --> U27
+
+U20 ..> U22 : <<include>>
+U21 ..> U22 : <<include>>
+U23 ..> U22 : <<include>>
+U24 ..> U25 : <<include>>
+U24 ..> U22 : <<include>>
+U26 ..> U21 : <<extend>>
+U28 ..> U20 : <<extend>>
+
+note bottom of U24
+  Le technicien déclare, un tiers confirme.
+  Sans cette confirmation, pas de clôture
+  ni de mesure de délai (RG-04, EF-24).
+end note
+
+@enduml

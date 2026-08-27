@@ -1,0 +1,56 @@
+@startuml G1-cas-utilisation-global
+!include ../_style.puml
+
+title AquaSensus - Cas d'utilisation, vue globale
+
+left to right direction
+skinparam nodesep 18
+skinparam ranksep 70
+
+actor "Habitant\n(usager)" as USAGER
+actor "Délégué\n(comité)" as DELEGUE
+actor "Technicien" as TECH
+actor "Partenaire\n(ONG / mairie)" as PARTENAIRE
+actor "Administrateur" as ADMIN
+
+rectangle "AquaSensus" {
+  usecase "UC-1\nConsulter l'état\nd'un point d'eau" as UC1
+  usecase "UC-2\nSignaler un\ndysfonctionnement" as UC2
+  usecase "UC-3\nQualifier un\nsignalement" as UC3
+  usecase "UC-4\nPlanifier et affecter\nune intervention" as UC4
+  usecase "UC-5\nRéaliser l'intervention\net consigner le diagnostic" as UC5
+  usecase "UC-6\nConfirmer le\nrétablissement" as UC6
+  usecase "UC-7\nEstimer la charge d'usage\net l'échéance d'entretien" as UC7
+  usecase "UC-8\nÉmettre les alertes\nprédictives" as UC8
+  usecase "UC-9\nTraiter une alerte\nprédictive" as UC9
+  usecase "UC-10\nSuivre les KPI\net exporter" as UC10
+  usecase "UC-11\nGérer le référentiel,\nles comptes et les seuils" as UC11
+}
+
+actor "Moteur prédictif\n(traitement quotidien)" as MOTEUR <<système>>
+actor "Canal SMS / USSD\nsimulé" as CANAL <<système>>
+
+USAGER --> UC1
+USAGER --> UC2
+
+DELEGUE --> UC3
+DELEGUE --> UC4
+DELEGUE --> UC6
+DELEGUE --> UC9
+
+TECH --> UC5
+
+PARTENAIRE --> UC10
+ADMIN --> UC11
+
+UC2 <-- CANAL
+UC7 <-- MOTEUR
+UC8 <-- MOTEUR
+
+legend bottom
+  Vue macro : un cas d'utilisation par intention métier.
+  Le détail (inclusions, extensions, scénarios) est décliné
+  dans 01-cas-utilisation, un diagramme par module.
+end legend
+
+@enduml

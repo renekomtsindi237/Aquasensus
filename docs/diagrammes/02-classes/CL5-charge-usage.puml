@@ -1,0 +1,93 @@
+@startuml CL5-charge-usage
+!include ../_style.puml
+
+title Domaine « charge » - Charge d'usage estimée et échéance de maintenance
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+note as N1
+  Le volume consommé est inconnaissable (H-2) :
+  les habitants puisent librement, sans comptage.
+  Ce domaine ne contient donc **aucune saisie** :
+  tout est déduit du référentiel et du calendrier.
+end note
+
+class ChargeUsage <<ValueObject>> {
+  -pointEauId : UUID
+  -dateReference : LocalDate
+  -origineReference : OrigineReference
+  -chargeCumuleeJours : BigDecimal
+  -intervalleEffectifJours : int
+  --
+  +ratioEcheance() : BigDecimal
+  +joursRestants() : int
+  +expliquer() : String
+}
+
+class CalculChargeUsage <<DomainService>> {
+  --
+  +calculer(PointEau, LocalDate, CalendrierSaisonnier) : ChargeUsage
+  -chargeCumulee(debut, fin, calendrier) : BigDecimal
+}
+
+class CalendrierSaisonnier <<AggregateRoot>> {
+  -id : UUID
+  -localiteId : UUID
+  -saisons : List<PeriodeSaisonniere>
+  --
+  +coefficient(LocalDate) : BigDecimal
+  +prochaineSaisonSeche(LocalDate) : LocalDate
+  +joursAvantSaisonSeche(LocalDate) : int
+}
+
+class PeriodeSaisonniere <<Entity>> {
+  -libelle : String
+  -jourDebut : int
+  -jourFin : int
+  -coefficient : BigDecimal
+  -actif : boolean
+  --
+  +couvre(LocalDate) : boolean
+}
+
+class IntervalleMaintenance <<DomainService>> {
+  -intervalleBaseJours : int
+  -populationReference : int
+  -borneMinJours : int
+  -borneMaxJours : int
+  --
+  +effectif(PointEau) : int
+}
+
+enum OrigineReference {
+  DERNIERE_MAINTENANCE
+  MISE_EN_SERVICE
+  INDETERMINEE
+  --
+  +confianceInduite() : Confiance
+}
+
+CalculChargeUsage ..> ChargeUsage : produit
+CalculChargeUsage ..> CalendrierSaisonnier : pondère avec
+CalculChargeUsage ..> IntervalleMaintenance : borne avec
+CalendrierSaisonnier "1" *-down- "1..*" PeriodeSaisonniere
+ChargeUsage -right-> OrigineReference
+
+note bottom of IntervalleMaintenance
+  intervalle = base × (population de référence
+  ÷ population desservie), borné à [90 j, 270 j].
+  Un ouvrage desservant 800 personnes atteint
+  son échéance environ trois fois plus vite
+  qu'un ouvrage en desservant 150 (EF-32).
+end note
+
+note bottom of OrigineReference
+  Sans maintenance préventive tracée, la référence
+  est la mise en service et la confiance baisse.
+  Sans aucune date connue, la charge n'est pas
+  calculée (RG-08).
+end note
+
+@enduml

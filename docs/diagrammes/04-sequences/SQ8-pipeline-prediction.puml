@@ -1,0 +1,73 @@
+@startuml SQ8-pipeline-prediction
+!include ../_style.puml
+
+title Séquence - Traitement quotidien du moteur prédictif (EF-40 à EF-47)
+
+autonumber "<b>[00]"
+
+participant "Ordonnanceur\n(04:00)" as CRON
+box "Service data (Python)" #F7F9FB
+  participant "Extraction" as EXT
+  participant "Préparation" as PREP
+  participant "Indicateurs" as IND
+  participant "Moteur de règles\nR1..R5" as RULES
+end box
+participant "API interne\n(Java)" as API
+database "PostgreSQL" as DB
+participant "MessagingGateway" as GW
+actor "Délégué" as D
+
+CRON -> EXT : lancer le traitement
+EXT -> API : GET /internal/analytics/dataset?depuis=...
+API -> DB : signalements, interventions,\nréférentiel, calendrier saisonnier
+API --> EXT : jeu incrémental
+
+EXT -> PREP : données brutes
+PREP -> PREP : dédupliquer, contrôler la complétude\ndu référentiel (population, date de référence)
+
+loop pour chaque point d'eau actif
+  PREP -> IND : série de l'ouvrage
+
+  alt Historique < 30 jours
+    IND -> API : indice avec confiance FAIBLE,\naucune alerte
+  else Historique suffisant
+    IND -> IND : M charge estimée (population, temps, saison),\nP pression de pannes, S signaux faibles,\nT tendance, C confiance
+    IND -> IND : score = 100 − 100 × (wS·S + wP·P + wM·M)
+    IND -> API : POST /internal/analytics/health-scores
+    API -> DB : enregistrer l'indice et ses facteurs
+
+    IND -> RULES : ProfilOuvrage
+    RULES -> RULES : évaluer R1 à R5,\nen écartant R1 et R4 si confiance FAIBLE (RG-16)
+
+    alt Aucune règle déclenchée
+      RULES -> API : clore les alertes caduques
+    else Règle déclenchée
+      alt Alerte active de même règle
+        RULES -> RULES : ignorer (anti-saturation)
+      else Nouvelle alerte
+        RULES -> RULES : composer l'explication\net les 3 facteurs majeurs
+        RULES -> API : POST /internal/analytics/alerts
+        API -> DB : enregistrer l'alerte (ACTIVE)
+        API -> GW : notifier le comité
+        GW -> D : « Risque de panne élevé sous 14 jours »
+      end
+    end
+  end
+end
+
+== Évaluation a posteriori ==
+
+CRON -> RULES : évaluer les alertes arrivées à échéance
+RULES -> API : GET pannes survenues dans l'horizon
+RULES -> RULES : issue = PANNE_SURVENUE\n/ PANNE_EVITEE / INDETERMINEE
+RULES -> API : mettre à jour les issues
+API -> DB : taux d'anticipation,\ntaux de fausses alertes
+
+note over API, DB
+  Si le service Python est arrêté, le signalement
+  et les interventions continuent de fonctionner :
+  les indices restent figés à leur dernière
+  valeur connue (ENF-13).
+end note
+
+@enduml

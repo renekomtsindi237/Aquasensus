@@ -1,0 +1,93 @@
+@startuml AC6-calcul-charge-usage
+!include ../_style.puml
+
+title Activité - Calcul de la charge d'usage sans aucune mesure (EF-30 à EF-35)
+
+start
+:Point d'eau actif à évaluer;
+
+partition "Choix de la date de référence" {
+  if (Maintenance préventive clôturée ?) then ([oui])
+    :Référence = date de la dernière
+    maintenance préventive;
+    :origine = DERNIERE_MAINTENANCE;
+  else ([non])
+    if (Date de mise en service connue ?) then ([oui])
+      #FEF3DC:Référence = mise en service,
+      confiance dégradée;
+      :origine = MISE_EN_SERVICE;
+    else ([non])
+      #FCEAEA:Charge non calculable :
+      publier l'indice sans le facteur M,
+      confiance FAIBLE;
+      :Signaler le référentiel incomplet
+      à l'administrateur (EF-35);
+      stop
+    endif
+  endif
+}
+
+partition "Charge cumulée en jours pondérés" {
+  :charge = 0;
+  while (Jour restant entre la référence\net aujourd'hui ?) is ([oui])
+    :Lire le coefficient saisonnier du jour
+    dans le calendrier de la localité;
+    if (Jour en saison sèche ?) then ([oui])
+      :charge += 1,30;
+    else ([non])
+      :charge += 1,00;
+    endif
+  endwhile ([non])
+}
+
+partition "Intervalle de maintenance effectif" {
+  if (Intervalle fixé manuellement ?\n(préconisation constructeur)) then ([oui])
+    :intervalle = valeur saisie (EF-33);
+  else ([non])
+    if (Population desservie renseignée ?) then ([oui])
+      :intervalle = base × (population de référence
+      ÷ population desservie);
+      :Borner entre 90 et 270 jours;
+    else ([non])
+      #FEF3DC:intervalle = base (180 jours),
+      confiance dégradée;
+      :Signaler le référentiel incomplet
+      à l'administrateur (EF-35);
+    endif
+  endif
+}
+
+:M = charge cumulée ÷ intervalle effectif,
+borné à 1,5;
+
+:Composer l'explication en clair :
+« 168 jours d'usage pour 450 habitants,
+dont 40 jours de saison sèche »;
+
+:Publier la charge, l'intervalle retenu
+et l'échéance prévue;
+
+if (M ≥ 0,85 et confiance suffisante ?) then ([oui])
+  #FDEEE1:Déclencher R1
+  (échéance de maintenance atteinte);
+else ([non])
+  :Aucune alerte de charge;
+endif
+
+if (Saison sèche dans moins de 30 jours\net M ≥ 0,60 ?) then ([oui])
+  #FEF3DC:Déclencher R4
+  (pression saisonnière à venir);
+else ([non])
+  :Aucune alerte saisonnière;
+endif
+
+stop
+
+note right
+  Ce calcul aboutit pour tout ouvrage dont
+  la fiche est renseignée, sans qu'aucun
+  habitant, délégué ou technicien
+  n'ait rien eu à compter ni à saisir.
+end note
+
+@enduml

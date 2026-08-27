@@ -1,0 +1,78 @@
+@startuml AC2-qualifier-signalement
+!include ../_style.puml
+
+title Activité - Qualifier un signalement et décider (EF-15, EF-16)
+
+|#F7F9FB|Délégué|
+|#EEF2F6|AquaSensus|
+
+|Délégué|
+start
+:Ouvrir la file de travail
+du comité;
+
+|AquaSensus|
+:Présenter les signalements RECU,
+triés par priorité;
+
+|Délégué|
+:Examiner le signalement
+(symptôme, corroborations, photos);
+
+if (Signalement fondé ?) then ([non])
+  :Rejeter avec motif;
+  |AquaSensus|
+  #FCEAEA:Statut REJETE ;
+  aucun impact sur l'état
+  ni sur l'indice (RG-11);
+  :Journaliser la décision;
+  stop
+else ([oui])
+endif
+
+|Délégué|
+if (Décrit un incident déjà suivi ?) then ([oui])
+  :Marquer en doublon
+  et désigner l'incident de référence;
+  |AquaSensus|
+  :Statut DOUBLON,
+  corroborations transférées;
+  stop
+else ([non])
+endif
+
+|Délégué|
+:Qualifier le signalement;
+
+|AquaSensus|
+:Statut QUALIFIE;
+
+|Délégué|
+if (Priorité automatique adaptée ?) then ([non])
+  :Ajuster la priorité
+  et justifier;
+  |AquaSensus|
+  :Figer le recalcul automatique
+  et journaliser (RG-14);
+else ([oui])
+endif
+
+|Délégué|
+if (Intervention immédiate possible ?) then ([oui])
+  :Créer l'intervention
+  et affecter un technicien;
+  |AquaSensus|
+  :Ouvrir l'intervention
+  (voir AC3);
+else ([non])
+  |Délégué|
+  :Mettre en attente
+  (cotisation, pièce, accès);
+  |AquaSensus|
+  #FEF3DC:Maintenir en file
+  et relancer à échéance;
+endif
+
+stop
+
+@enduml

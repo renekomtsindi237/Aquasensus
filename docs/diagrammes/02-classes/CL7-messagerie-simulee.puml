@@ -1,0 +1,132 @@
+@startuml CL7-messagerie-simulee
+!include ../_style.puml
+
+title Domaine « messaging » - Canal SMS / USSD simulé et notifications
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+interface MessagingGateway <<Port>> {
+  +envoyer(MessageSortant) : ResultatEnvoi
+  +supporte(Canal) : boolean
+}
+
+class SimulateurMessagerie <<Adapter>> {
+  -journal : List<MessageSimule>
+  --
+  +envoyer(MessageSortant) : ResultatEnvoi
+  +injecterEntrant(numero, contenu) : MessageSimule
+}
+
+class PasserelleOperateur <<Adapter, post-v1>> {
+  -urlOperateur : String
+  --
+  +envoyer(MessageSortant) : ResultatEnvoi
+}
+
+class MessageSortant <<ValueObject>> {
+  -destinataire : Telephone
+  -contenu : String
+  -canal : Canal
+  --
+  +longueurValide() : boolean
+  +alphabetGsm7() : boolean
+}
+
+class MessageSimule <<Entity>> {
+  -id : UUID
+  -direction : Direction
+  -canal : Canal
+  -numeroFictif : String
+  -contenu : String
+  -sessionId : String
+  -horodatage : Instant
+  -signalementId : UUID
+}
+
+class AnalyseurSmsEntrant <<DomainService>> {
+  --
+  +analyser(contenu) : CommandeSignalement
+  +codeSymptome(String) : CategorieSymptome
+}
+
+class SessionUssd <<AggregateRoot>> {
+  -id : String
+  -numeroFictif : String
+  -etape : EtapeUssd
+  -contexte : Map<String, String>
+  -expireLe : Instant
+  --
+  +avancer(saisie) : ReponseUssd
+  +estExpiree() : boolean
+}
+
+class Notification <<AggregateRoot>> {
+  -id : UUID
+  -destinataireId : UUID
+  -evenement : TypeEvenement
+  -canal : Canal
+  -contenu : String
+  -statut : StatutNotification
+  -tentatives : int
+  --
+  +marquerEnvoyee() : void
+  +replanifier() : void
+}
+
+package "Énumérations" {
+  enum Direction {
+    ENTRANT
+    SORTANT
+  }
+
+  enum EtapeUssd {
+    MENU_PRINCIPAL
+    SAISIE_CODE_OUVRAGE
+    CHOIX_SYMPTOME
+    CONFIRMATION
+    TERMINEE
+  }
+
+  enum TypeEvenement {
+    SIGNALEMENT_GRAVE
+    ALERTE_EMISE
+    INTERVENTION_AFFECTEE
+    INTERVENTION_EN_RETARD
+    RETABLISSEMENT_CONFIRME
+  }
+
+  enum StatutNotification {
+    EN_ATTENTE
+    ENVOYEE
+    ECHOUEE
+  }
+}
+
+MessagingGateway <|.down. SimulateurMessagerie
+MessagingGateway <|.down. PasserelleOperateur
+SimulateurMessagerie "1" *-down- "0..*" MessageSimule
+MessagingGateway .left.> MessageSortant : consomme
+AnalyseurSmsEntrant .down.> MessageSimule : interprète
+SessionUssd .left.> AnalyseurSmsEntrant : réutilise
+Notification .up.> MessagingGateway : emprunte
+MessageSimule -right-> Direction
+SessionUssd -right-> EtapeUssd
+Notification -right-> TypeEvenement
+Notification -right-> StatutNotification
+
+note bottom of MessagingGateway
+  Le métier ne connaît que ce port.
+  Passer d'un simulateur à un opérateur
+  réel est une substitution d'adaptateur,
+  sans modification du cœur (EF-60).
+end note
+
+note right of MessageSortant
+  Contrainte de la charte :
+  160 caractères, alphabet GSM-7,
+  aucun émoji (§12.4).
+end note
+
+@enduml

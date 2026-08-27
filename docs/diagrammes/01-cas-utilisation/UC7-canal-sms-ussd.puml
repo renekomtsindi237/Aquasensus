@@ -1,0 +1,47 @@
+@startuml UC7-canal-sms-ussd
+!include ../_style.puml
+
+title Module M7 - Canal SMS / USSD simulé
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Habitant\n(téléphone à touches)" as USAGER
+actor "Délégué" as DELEGUE
+actor "Administrateur" as ADMIN
+actor "Passerelle réelle\n(hors v1)" as OPERATEUR <<externe>>
+
+rectangle "M7 - Messagerie simulée" {
+  usecase "EF-60\nExposer un adaptateur\nde messagerie remplaçable" as U60
+  usecase "EF-61\nTraiter un SMS entrant\nau format court" as U61
+  usecase "EF-62\nRépondre par un SMS\nde confirmation (160 car.)" as U62
+  usecase "EF-63\nDérouler une session\nUSSD arborescente" as U63
+  usecase "EF-64\nPiloter la console\nde simulation" as U64
+  usecase "EF-65\nJournaliser les messages\nentrants et sortants" as U65
+  usecase "EF-66\nÉmettre les notifications\npar le même adaptateur" as U66
+}
+
+USAGER --> U61
+USAGER --> U63
+DELEGUE --> U66
+ADMIN --> U64
+
+U61 ..> U62 : <<include>>
+U61 ..> U65 : <<include>>
+U63 ..> U61 : <<include>>
+U64 ..> U61 : <<extend>>
+U64 ..> U63 : <<extend>>
+U66 ..> U60 : <<include>>
+U62 ..> U60 : <<include>>
+
+U60 <.. OPERATEUR : <<réalise, post-v1>>
+
+note bottom of U60
+  L'implémentation v1 est un simulateur local.
+  Le passage à un opérateur réel doit être
+  une substitution d'adaptateur, sans toucher
+  au code métier (EF-60).
+end note
+
+@enduml

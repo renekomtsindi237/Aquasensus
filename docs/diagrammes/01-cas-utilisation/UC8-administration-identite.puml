@@ -1,0 +1,49 @@
+@startuml UC8-administration-identite
+!include ../_style.puml
+
+title Modules M9 et M10 - Comptes, rôles, administration et audit
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Utilisateur\n(tout rôle)" as USER
+actor "Administrateur" as ADMIN
+actor "Canal SMS\nsimulé" as CANAL <<système>>
+
+rectangle "M9 - Identité et administration" {
+  usecase "EF-80\nS'authentifier\n(jeton court + rafraîchissement)" as U80
+  usecase "EF-81\nCréer, suspendre, réactiver\nun compte et son périmètre" as U81
+  usecase "EF-82\nRéinitialiser un mot de passe\n(code à usage unique)" as U82
+  usecase "EF-83\nAppliquer la politique\nde mot de passe" as U83
+  usecase "EF-84\nGérer localités, comités,\nsymptômes et pièces" as U84
+  usecase "EF-85\nVerrouiller après\n5 échecs consécutifs" as U85
+}
+
+rectangle "M10 - Traçabilité" {
+  usecase "EF-90\nJournaliser les\nopérations sensibles" as U90
+  usecase "EF-91\nConsulter et filtrer\nle journal d'audit" as U91
+  usecase "EF-92\nGarantir un journal\nen insertion seule" as U92
+}
+
+USER --> U80
+USER --> U82
+ADMIN --> U81
+ADMIN --> U84
+ADMIN --> U91
+
+U80 ..> U85 : <<include>>
+U80 ..> U83 : <<include>>
+U82 ..> U83 : <<include>>
+U82 ..> CANAL : <<utilise>>
+U81 ..> U90 : <<include>>
+U84 ..> U90 : <<include>>
+U91 ..> U92 : <<include>>
+
+note bottom of U81
+  RBAC sans KYC : rôle + périmètre
+  (comité ou localité), vérifiés
+  côté serveur à chaque appel.
+end note
+
+@enduml

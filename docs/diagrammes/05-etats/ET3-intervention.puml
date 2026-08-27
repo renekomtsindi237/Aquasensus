@@ -1,0 +1,58 @@
+@startuml ET3-intervention
+!include ../_style.puml
+
+title Machine à états - Intervention (EF-22, RG-04, RG-05)
+
+[*] --> OUVERTE : création depuis un signalement,\nune alerte ou une saisie manuelle
+
+state OUVERTE #D6EDF7
+state AFFECTEE #D6EDF7
+state EN_COURS #FEF3DC
+state SUSPENDUE #FDEEE1
+state REALISEE #E6F4EC
+state CLOTUREE #E6F4EC
+state ANNULEE #EEF2F6
+
+OUVERTE : aucun technicien désigné
+AFFECTEE : technicien et échéance définis
+EN_COURS : intervention démarrée sur site
+SUSPENDUE : motif obligatoire (pièce, financement, accès, météo)
+REALISEE : déclarée par le technicien
+REALISEE : compte rendu complet exigé (RG-05)
+CLOTUREE : rétablissement confirmé par un tiers (RG-04)
+CLOTUREE : temps de rétablissement calculé
+ANNULEE : sans objet, motif journalisé
+
+OUVERTE --> AFFECTEE : affectation d'un technicien
+AFFECTEE --> EN_COURS : démarrage sur site
+EN_COURS --> SUSPENDUE : blocage constaté
+SUSPENDUE --> EN_COURS : blocage levé
+EN_COURS --> REALISEE : compte rendu complet
+REALISEE --> EN_COURS : rétablissement non constaté\npar le confirmateur
+REALISEE --> CLOTUREE : confirmation par un tiers
+
+OUVERTE --> ANNULEE : sans objet
+AFFECTEE --> ANNULEE : sans objet
+SUSPENDUE --> ANNULEE : abandon motivé
+
+CLOTUREE --> [*]
+ANNULEE --> [*]
+
+state "Récidive sous 15 jours" as RECIDIVE <<choice>>
+CLOTUREE --> RECIDIVE
+RECIDIVE --> OUVERTE : réouverture avec\nlien de filiation (EF-28)
+
+note right of REALISEE
+  Le technicien déclare,
+  il ne clôture pas.
+  Sans confirmation par un tiers,
+  aucun délai n'est mesuré.
+end note
+
+note bottom
+  Toute transition hors de ce graphe
+  est refusée en 422 par l'API,
+  horodatée et journalisée.
+end note
+
+@enduml

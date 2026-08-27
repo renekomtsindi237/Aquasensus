@@ -1,0 +1,87 @@
+@startuml AC4-calcul-indice-alerte
+!include ../_style.puml
+
+title Activité - Traitement quotidien : indice de santé et alertes (EF-40 à EF-47)
+
+start
+:Déclenchement 04:00 (heure locale)
+ou événement significatif;
+
+:Extraire les données incrémentales
+(signalements, interventions, référentiel,
+calendrier saisonnier);
+:Nettoyer et dédupliquer;
+
+:Constituer le jeu de travail
+des points d'eau actifs;
+
+while (Points d'eau restants ?) is ([oui])
+  :Point d'eau suivant;
+
+  if (Historique < 30 jours ?) then ([oui])
+    #EEF2F6:Publier l'indice
+    en confiance FAIBLE,
+    aucune alerte;
+  else ([non])
+    :Calculer M (charge de maintenance estimée)
+    → détail en AC6;
+    :Calculer P (pression de pannes, récence pondérée);
+    :Calculer S (signaux faibles / population);
+    :Calculer T (tendance sur 3 fenêtres de 7 jours);
+
+    :score = 100 − 100 × (wS·S + wP·P + wM·M);
+    :Déterminer la bande
+    (opérationnel, surveillance, risque, critique);
+
+    if (Référentiel complet ?
+    population et date de référence connues) then ([oui])
+      :Conserver la confiance calculée;
+    else ([non])
+      #FEF3DC:Marquer confiance FAIBLE (RG-08)
+      et signaler la correction à faire;
+    endif
+
+    :Publier l'indice de santé
+    avec ses facteurs;
+
+    :Moteur de règles :
+    R1 échéance de maintenance,
+    R2 dégradation progressive,
+    R3 fragilité chronique,
+    R4 pression saisonnière,
+    R5 cumul critique;
+
+    if (Confiance FAIBLE ?) then ([oui])
+      #FEF3DC:Retenir R1 et R4,
+      fondées sur l'estimation (RG-16);
+    else ([non])
+      :Conserver toutes les règles;
+    endif
+
+    if (Au moins une règle déclenchée ?) then ([oui])
+      if (Alerte active de même règle ?) then ([oui])
+        :Ignorer (anti-saturation, EF-47);
+      else ([non])
+        :Composer l'explication
+        et les 3 facteurs majeurs;
+        #FDEEE1:Émettre l'alerte
+        avec horizon et recommandation;
+        :Notifier le comité
+        et le partenaire;
+      endif
+    else ([non])
+      :Clore les alertes
+      devenues caduques;
+    endif
+  endif
+
+endwhile ([non])
+
+:Évaluer a posteriori les alertes
+arrivées à échéance
+(panne survenue / évitée);
+:Publier taux d'anticipation
+et taux de fausses alertes;
+stop
+
+@enduml

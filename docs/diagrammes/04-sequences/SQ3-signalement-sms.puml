@@ -1,0 +1,52 @@
+@startuml SQ3-signalement-sms
+!include ../_style.puml
+
+title Séquence - Signalement par SMS simulé (EF-61, EF-62, EF-65)
+
+autonumber "<b>[00]"
+
+actor "Habitant\n(téléphone à touches)" as U
+participant "Console de simulation\n(ADMIN)" as SIM
+participant "SimulateurMessagerie\n<<Adapter>>" as GW
+participant "AnalyseurSmsEntrant" as PARSER
+participant "SignalementService" as SVC
+database "PostgreSQL" as DB
+actor "Délégué" as D
+
+U -> SIM : « AQS YDE-042 DEBIT\nplus rien depuis hier soir »
+SIM -> GW : injecterEntrant(numéro, contenu)
+GW -> DB : journaliser le message ENTRANT
+GW -> PARSER : analyser(contenu)
+
+alt Format invalide ou code d'ouvrage inconnu
+  PARSER --> GW : ErreurAnalyse
+  GW -> DB : journaliser le message SORTANT
+  GW -> U : « AquaSensus: format non reconnu.\nEnvoyez AQS <code> <symptome>. »
+else Format reconnu
+  PARSER --> GW : CommandeSignalement\n(code, catégorie, commentaire)
+  GW -> SVC : creer(commande, canal = SMS)
+  SVC -> DB : corroboration ou nouvel incident
+  SVC --> GW : référence SIG-2026-01187
+
+  GW -> GW : composer la réponse\n(≤ 160 caractères, GSM-7)
+  GW -> DB : journaliser le message SORTANT
+  GW -> U : « AquaSensus: signalement SIG-2026-01187\nenregistre pour YDE-042. Le comite est averti. »
+
+  alt Gravité haute
+    GW -> D : notification au délégué
+  end
+end
+
+note over GW
+  Le numéro est haché à l'enregistrement ;
+  seuls les 4 derniers chiffres sont
+  restitués (RG-10).
+end note
+
+note over SIM, GW
+  En v1 la console de simulation remplace
+  l'opérateur. Le service métier ignore
+  totalement cette différence (EF-60).
+end note
+
+@enduml

@@ -1,0 +1,172 @@
+@startuml CL6-prediction
+!include ../_style.puml
+
+title Domaine « prediction » - Indice de santé et moteur de règles
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+class IndiceSante <<AggregateRoot>> {
+  -id : UUID
+  -pointEauId : UUID
+  -dateCalcul : LocalDate
+  -score : int
+  -bande : BandeSante
+  -confiance : Confiance
+  -chargeCumuleeJours : BigDecimal
+  -intervalleEffectifJours : int
+  -versionParametrage : String
+  --
+  +bandeDepuisScore(int) : BandeSante
+  +etatInduit() : EtatPointEau
+  +echeanceMaintenance() : LocalDate
+}
+
+class Facteur <<ValueObject>> {
+  -code : CodeIndicateur
+  -libelle : String
+  -valeur : BigDecimal
+  -seuil : BigDecimal
+  -contribution : BigDecimal
+  --
+  +depasseSeuil() : boolean
+}
+
+class Alerte <<AggregateRoot>> {
+  -id : UUID
+  -pointEauId : UUID
+  -regle : CodeRegle
+  -niveau : NiveauAlerte
+  -horizonJours : int
+  -emiseLe : Instant
+  -explication : String
+  -recommandation : String
+  -statut : StatutAlerte
+  -issue : IssueAlerte
+  -versionParametrage : String
+  --
+  +acquitter(Utilisateur) : void
+  +reporter(echeance, motif) : void
+  +contester(motif) : void
+  +cloreSiCaduque(IndiceSante) : void
+  +evaluerIssue(historiquePannes) : IssueAlerte
+}
+
+class RegleAlerte <<DomainService>> {
+  -code : CodeRegle
+  -libelle : String
+  -niveau : NiveauAlerte
+  --
+  +sApplique(ProfilOuvrage) : boolean
+  +expliquer(ProfilOuvrage) : String
+}
+
+class ProfilOuvrage <<ValueObject>> {
+  -chargeMaintenance : BigDecimal
+  -pressionPannes : BigDecimal
+  -signauxFaibles : BigDecimal
+  -tendance : BigDecimal
+  -joursAvantSaisonSeche : int
+  -confiance : Confiance
+  --
+  +reposeSurDesFaitsObserves() : boolean
+}
+
+class ParametrageMoteur <<Entity>> {
+  -version : String
+  -horizonJours : int
+  -seuilCharge : BigDecimal
+  -fenetreSignauxJours : int
+  -intervalleBaseJours : int
+  -populationReference : int
+  -ponderations : Map<CodeIndicateur, BigDecimal>
+  -actifDepuis : Instant
+}
+
+package "Énumérations" {
+  enum CodeIndicateur {
+    M
+    P
+    S
+    T
+  }
+
+  enum CodeRegle {
+    R1_ECHEANCE_MAINTENANCE
+    R2_DEGRADATION_PROGRESSIVE
+    R3_FRAGILITE_CHRONIQUE
+    R4_PRESSION_SAISONNIERE
+    R5_CUMUL_CRITIQUE
+  }
+
+  enum NiveauAlerte {
+    MODERE
+    ELEVE
+    CRITIQUE
+  }
+
+  enum StatutAlerte {
+    ACTIVE
+    ACQUITTEE
+    REPORTEE
+    TRAITEE
+    CONTESTEE
+    CADUQUE
+  }
+
+  enum IssueAlerte {
+    PANNE_SURVENUE
+    PANNE_EVITEE
+    INDETERMINEE
+  }
+
+  enum BandeSante {
+    OPERATIONNEL
+    SOUS_SURVEILLANCE
+    RISQUE_ELEVE
+    CRITIQUE
+  }
+
+  enum Confiance {
+    HAUTE
+    MOYENNE
+    FAIBLE
+  }
+}
+
+IndiceSante "1" *-down- "1..*" Facteur
+Alerte "1" *-down- "1..*" Facteur
+Alerte "0..*" -down-> "1" RegleAlerte
+RegleAlerte .down.> ProfilOuvrage : évalue
+IndiceSante .down.> ProfilOuvrage : dérive de
+IndiceSante -right-> BandeSante
+IndiceSante -right-> Confiance
+Alerte -right-> NiveauAlerte
+Alerte -right-> StatutAlerte
+Alerte -right-> IssueAlerte
+Alerte -right-> CodeRegle
+RegleAlerte -right-> CodeRegle
+Facteur -right-> CodeIndicateur
+ParametrageMoteur .left.> RegleAlerte : configure
+
+note bottom of Alerte
+  versionParametrage fige les seuils en vigueur :
+  une alerte passée reste interprétable
+  même après réglage du moteur (EF-45).
+end note
+
+note right of RegleAlerte
+  R1 échéance d'entretien ≥ 0,85 · R2 tendance croissante
+  R3 ≥ 2 pannes / 90 j · R4 saison sèche imminente
+  R5 cumul critique. Chaque règle sait s'expliquer.
+end note
+
+note bottom of ProfilOuvrage
+  M est une estimation (charge en jours pondérés),
+  P et S sont des faits observés. En confiance faible,
+  seules les règles fondées sur des faits observés
+  se déclenchent (RG-16).
+end note
+
+@enduml

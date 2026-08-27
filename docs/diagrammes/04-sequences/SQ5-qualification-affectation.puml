@@ -1,0 +1,75 @@
+@startuml SQ5-qualification-affectation
+!include ../_style.puml
+
+title Séquence - Qualification et affectation d'une intervention (EF-15, EF-20, EF-21, EF-26)
+
+autonumber "<b>[00]"
+
+actor "Délégué" as D
+participant "PWA" as APP
+participant "ReportController" as RC
+participant "SignalementService" as SIG
+participant "InterventionController" as IC
+participant "InterventionService" as INT
+participant "PolitiqueAcces" as ACL
+database "PostgreSQL" as DB
+participant "MessagingGateway" as GW
+actor "Technicien" as T
+
+D -> APP : ouvre la file de travail
+APP -> RC : GET /reports?statut=RECU
+RC -> ACL : vérifier le périmètre du comité
+ACL --> RC : ok
+RC -> DB : signalements du périmètre,\ntriés par priorité
+RC --> APP : liste paginée
+
+D -> APP : qualifie le signalement
+APP -> RC : PATCH /reports/{id}/qualification
+RC -> SIG : qualifier(id, délégué)
+
+alt Signalement rejeté
+  SIG -> DB : statut REJETE + motif
+  note right of SIG
+    Aucun impact sur l'état de l'ouvrage
+    ni sur l'indice de santé (RG-11).
+  end note
+  SIG --> RC : signalement rejeté
+else Signalement qualifié
+  SIG -> DB : statut QUALIFIE
+  SIG --> RC : signalement qualifié
+end
+RC --> APP : 200
+
+D -> APP : crée l'intervention
+APP -> IC : POST /interventions\n(signalements, type, échéance)
+IC -> ACL : vérifier le périmètre
+IC -> INT : ouvrir(commande)
+INT -> DB : créer l'intervention (OUVERTE)
+INT -> DB : rattacher les signalements qualifiés
+
+D -> APP : affecte un technicien
+APP -> IC : POST /interventions/{id}/transitions (AFFECTEE)
+IC -> INT : affecter(technicien, échéance)
+INT -> INT : vérifier la transition\nOUVERTE → AFFECTEE
+INT -> DB : enregistrer le jalon horodaté
+INT -> GW : notifier le technicien
+GW -> T : « Intervention INT-2026-0134 sur YDE-042 »
+
+== Préparation du déplacement ==
+
+T -> APP : ouvre le dossier de préparation
+APP -> IC : GET /interventions/{id}/briefing
+IC -> INT : construireDossier(id)
+INT -> DB : symptômes corroborés
+INT -> DB : historique des pannes de l'ouvrage
+INT -> DB : pièces déjà remplacées
+INT --> IC : DossierPreparation
+IC --> APP : symptômes, historique, pièces, accès
+APP --> T : « Débit faible, 5 signalements en 10 jours.\nJoints changés en mars. »
+
+note over INT, DB
+  C'est ce dossier qui remplace
+  le déplacement à l'aveugle (EF-26).
+end note
+
+@enduml

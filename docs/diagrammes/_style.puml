@@ -1,0 +1,196 @@
+' ===========================================================================
+' AquaSensus - Style PlantUML commun
+' Aligne sur docs/CHARTE-GRAPHIQUE.md (AQS-CHG-001)
+' Inclusion : !include ../_style.puml
+' ===========================================================================
+
+' --- Tokens de la charte ---------------------------------------------------
+!$aqs_blue50    = "#EFF8FC"
+!$aqs_blue100   = "#D6EDF7"
+!$aqs_blue200   = "#ADDAEF"
+!$aqs_blue500   = "#1B87B8"
+!$aqs_blue600   = "#106D99"
+!$aqs_blue800   = "#0B4763"
+!$aqs_earth100  = "#F7ECE2"
+!$aqs_earth500  = "#C86A2C"
+!$aqs_earth700  = "#A2521F"
+!$aqs_n0        = "#FFFFFF"
+!$aqs_n50       = "#F7F9FB"
+!$aqs_n100      = "#EEF2F6"
+!$aqs_n200      = "#DDE4EB"
+!$aqs_n300      = "#C3CDD8"
+!$aqs_n600      = "#51606F"
+!$aqs_n700      = "#3B4855"
+!$aqs_n900      = "#161E26"
+
+' Couleurs semantiques d'etat (reservees, cf. charte 4.3)
+!$aqs_ok        = "#1E8E4E"
+!$aqs_ok_bg     = "#E6F4EC"
+!$aqs_watch     = "#F2A900"
+!$aqs_watch_bg  = "#FEF3DC"
+!$aqs_risk      = "#D2620E"
+!$aqs_risk_bg   = "#FDEEE1"
+!$aqs_down      = "#C62828"
+!$aqs_down_bg   = "#FCEAEA"
+!$aqs_repair    = "#106D99"
+!$aqs_repair_bg = "#D6EDF7"
+!$aqs_off       = "#64748B"
+!$aqs_off_bg    = "#EEF2F6"
+
+' --- Base ------------------------------------------------------------------
+skinparam backgroundColor $aqs_n0
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 13
+skinparam defaultFontColor $aqs_n900
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam dpi 150
+skinparam ArrowColor $aqs_n600
+skinparam ArrowFontColor $aqs_n700
+skinparam ArrowFontSize 12
+skinparam TitleFontSize 18
+skinparam TitleFontColor $aqs_blue800
+skinparam TitleFontStyle bold
+skinparam CaptionFontSize 11
+skinparam CaptionFontColor $aqs_n600
+skinparam WrapWidth 260
+skinparam maxMessageSize 180
+
+skinparam NoteBackgroundColor $aqs_earth100
+skinparam NoteBorderColor $aqs_earth500
+skinparam NoteFontColor $aqs_n900
+skinparam NoteFontSize 12
+
+skinparam LegendBackgroundColor $aqs_n50
+skinparam LegendBorderColor $aqs_n200
+skinparam LegendFontSize 12
+
+' --- Acteurs et cas d'utilisation -----------------------------------------
+skinparam ActorStyle awesome
+skinparam actor {
+  BackgroundColor $aqs_blue100
+  BorderColor $aqs_blue600
+  FontColor $aqs_n900
+}
+skinparam usecase {
+  BackgroundColor $aqs_n0
+  BorderColor $aqs_blue600
+  FontColor $aqs_n900
+  BorderThickness 1
+}
+skinparam rectangle {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_n300
+  FontColor $aqs_blue800
+  FontStyle bold
+}
+
+' --- Classes ---------------------------------------------------------------
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor $aqs_n0
+  BorderColor $aqs_blue600
+  BorderThickness 1
+  FontColor $aqs_blue800
+  FontStyle bold
+  AttributeFontColor $aqs_n700
+  AttributeFontSize 12
+  StereotypeFontColor $aqs_n600
+  StereotypeFontSize 11
+}
+skinparam enum {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_earth500
+  FontColor $aqs_earth700
+}
+skinparam interface {
+  BackgroundColor $aqs_blue50
+  BorderColor $aqs_blue600
+  FontColor $aqs_blue800
+}
+skinparam package {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_n300
+  FontColor $aqs_blue800
+}
+skinparam packageStyle rectangle
+
+' --- Activites -------------------------------------------------------------
+skinparam activity {
+  BackgroundColor $aqs_blue50
+  BorderColor $aqs_blue600
+  FontColor $aqs_n900
+  DiamondBackgroundColor $aqs_n50
+  DiamondBorderColor $aqs_n600
+  DiamondFontColor $aqs_n900
+  StartColor $aqs_blue600
+  EndColor $aqs_n700
+  BarColor $aqs_blue600
+}
+skinparam swimlane {
+  BorderColor $aqs_n300
+  TitleFontColor $aqs_blue800
+  TitleFontSize 14
+}
+skinparam partition {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_n300
+  FontColor $aqs_blue800
+}
+
+' --- Sequences -------------------------------------------------------------
+skinparam sequence {
+  ArrowColor $aqs_blue600
+  LifeLineBorderColor $aqs_n300
+  LifeLineBackgroundColor $aqs_n100
+  ParticipantBackgroundColor $aqs_blue100
+  ParticipantBorderColor $aqs_blue600
+  ParticipantFontColor $aqs_n900
+  ActorBackgroundColor $aqs_blue100
+  ActorBorderColor $aqs_blue600
+  BoxBackgroundColor $aqs_n50
+  BoxBorderColor $aqs_n300
+  BoxFontColor $aqs_blue800
+  DividerBackgroundColor $aqs_n100
+  DividerBorderColor $aqs_n300
+  GroupBackgroundColor $aqs_n100
+  GroupBorderColor $aqs_n300
+  GroupHeaderFontColor $aqs_blue800
+  ReferenceBackgroundColor $aqs_n50
+  ReferenceBorderColor $aqs_blue600
+}
+
+' --- Etats -----------------------------------------------------------------
+skinparam state {
+  BackgroundColor $aqs_n0
+  BorderColor $aqs_blue600
+  FontColor $aqs_n900
+  AttributeFontColor $aqs_n600
+  StartColor $aqs_blue600
+  EndColor $aqs_n700
+}
+
+' --- Composants et deploiement --------------------------------------------
+skinparam component {
+  BackgroundColor $aqs_n0
+  BorderColor $aqs_blue600
+  FontColor $aqs_blue800
+}
+skinparam database {
+  BackgroundColor $aqs_blue50
+  BorderColor $aqs_blue600
+  FontColor $aqs_blue800
+}
+skinparam queue {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_n600
+}
+skinparam node {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_n300
+  FontColor $aqs_blue800
+}
+skinparam cloud {
+  BackgroundColor $aqs_n50
+  BorderColor $aqs_n300
+}

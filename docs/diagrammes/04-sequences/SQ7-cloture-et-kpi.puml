@@ -1,0 +1,70 @@
+@startuml SQ7-cloture-et-kpi
+!include ../_style.puml
+
+title Séquence - Confirmation du rétablissement et calcul du KPI (EF-24, EF-25, EF-53)
+
+autonumber "<b>[00]"
+
+actor "Délégué" as D
+participant "PWA" as APP
+participant "InterventionController" as IC
+participant "InterventionService" as INT
+participant "MachineEtats" as ME
+participant "CalculRetablissement" as CALC
+database "PostgreSQL" as DB
+participant "MessagingGateway" as GW
+participant "Moteur prédictif" as PY
+actor "Habitant déclarant" as U
+actor "Partenaire" as P
+
+D -> APP : confirme le rétablissement
+APP -> IC : POST /interventions/{id}/transitions (CLOTUREE)
+IC -> INT : cloturer(id, confirmateur = délégué)
+
+INT -> ME : REALISEE → CLOTUREE autorisée ?
+alt Confirmateur = technicien déclarant
+  ME --> INT : refus
+  INT --> IC : RegleMetierException (RG-04)
+  IC --> APP : 422 « la clôture exige un tiers »
+else Compte rendu incomplet
+  ME --> INT : refus
+  INT --> IC : RegleMetierException (RG-05)
+  IC --> APP : 422 + champ manquant
+else Autorisée
+  ME --> INT : ok
+  INT -> DB : charger les signalements rattachés
+  INT -> CALC : calculer(intervention, signalements)
+  CALC -> CALC : fin = clôture\ndébut = premier signalement rattaché
+  CALC --> INT : DureeRetablissement (3 j 14 h)
+
+  INT -> DB : statut CLOTUREE + jalon + durée
+  INT -> DB : signalements rattachés → RESOLU
+  INT -> DB : point d'eau → OPERATIONNEL
+  INT -> DB : historiser le changement d'état
+
+  INT -> PY : demander le recalcul de l'indice
+  PY -> DB : publier l'indice de santé mis à jour
+  PY -> DB : clore les alertes devenues caduques
+
+  INT -> GW : notifier les déclarants
+  GW -> U : « Eau rétablie. Interruption : 3 j 14 h. »
+  INT --> IC : intervention clôturée
+  IC --> APP : 200
+end
+
+== Restitution ==
+
+P -> APP : ouvre le tableau de bord
+APP -> IC : GET /dashboard/kpi?periode=...&localite=...
+IC -> DB : agréger les durées de rétablissement
+IC --> APP : médiane, P90, effectif,\nrépartition des états, délai comité → technicien
+APP --> P : KPI et comparaison de périodes
+
+note over CALC
+  Le délai part du premier signalement,
+  pas de l'ouverture de l'intervention :
+  c'est le temps réellement vécu
+  par les habitants.
+end note
+
+@enduml

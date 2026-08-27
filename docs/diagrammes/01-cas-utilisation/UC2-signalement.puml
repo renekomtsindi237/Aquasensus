@@ -1,0 +1,49 @@
+@startuml UC2-signalement
+!include ../_style.puml
+
+title Module M2 - Signalement d'incident
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Habitant\n(avec ou sans compte)" as USAGER
+actor "Délégué" as DELEGUE
+actor "Technicien" as TECH
+actor "Canal SMS / USSD\nsimulé" as CANAL <<système>>
+
+rectangle "M2 - Signalement" {
+  usecase "EF-10\nCréer un signalement\n(< 60 secondes)" as U10
+  usecase "EF-11\nSignaler sans compte\n(identification légère)" as U11
+  usecase "EF-12\nChoisir la catégorie\nde symptôme" as U12
+  usecase "EF-13\nDétecter et rattacher\nles doublons (24 h)" as U13
+  usecase "EF-14\nConsulter l'état\nde prise en charge" as U14
+  usecase "EF-15\nQualifier, rejeter\nou marquer en doublon" as U15
+  usecase "EF-16\nCalculer et ajuster\nla priorité" as U16
+  usecase "EF-17\nNotifier le comité\n(gravité haute)" as U17
+}
+
+USAGER --> U10
+USAGER --> U11
+USAGER --> U14
+TECH --> U10
+DELEGUE --> U10
+DELEGUE --> U15
+DELEGUE --> U16
+CANAL --> U10
+
+U10 ..> U12 : <<include>>
+U10 ..> U13 : <<include>>
+U10 ..> U16 : <<include>>
+U10 ..> U14 : <<include>>
+U11 ..> U10 : <<extend>>
+U15 ..> U10 : <<extend>>
+U17 ..> U10 : <<extend>>
+
+note bottom of U13
+  Deux signalements identiques en 24 h
+  = un incident corroboré, jamais
+  deux incidents (RG-03).
+end note
+
+@enduml

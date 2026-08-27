@@ -1,0 +1,59 @@
+@startuml ET4-alerte
+!include ../_style.puml
+
+title Machine à états - Alerte prédictive (EF-44, EF-46, EF-47, RG-06, RG-07)
+
+[*] --> ACTIVE : règle R1..R5 déclenchée
+
+state ACTIVE #FDEEE1
+state ACQUITTEE #FEF3DC
+state REPORTEE #FEF3DC
+state TRAITEE #E6F4EC
+state CONTESTEE #EEF2F6
+state CADUQUE #EEF2F6
+
+ACTIVE : notifiée au comité
+ACTIVE : explication et 3 facteurs affichés
+ACTIVE : une seule alerte active par règle et par ouvrage
+
+ACQUITTEE : le comité a pris connaissance
+REPORTEE : échéance et motif enregistrés
+REPORTEE : relance programmée
+TRAITEE : intervention préventive réalisée
+CONTESTEE : motif conservé pour l'ajustement des seuils
+CADUQUE : conditions de déclenchement disparues
+
+ACTIVE --> ACQUITTEE : accusé de réception
+ACTIVE --> CONTESTEE : contestation motivée (RG-07)
+ACTIVE --> CADUQUE : indice repassé au-dessus du seuil
+ACQUITTEE --> REPORTEE : report avec échéance
+ACQUITTEE --> TRAITEE : intervention préventive clôturée
+REPORTEE --> ACQUITTEE : relance à échéance
+REPORTEE --> TRAITEE : intervention préventive clôturée
+ACQUITTEE --> CADUQUE : conditions disparues
+REPORTEE --> CADUQUE : conditions disparues
+
+TRAITEE --> [*]
+CONTESTEE --> [*]
+CADUQUE --> [*]
+
+state "Évaluation à l'échéance\nde l'horizon" as EVAL <<choice>>
+TRAITEE --> EVAL
+CADUQUE --> EVAL
+REPORTEE --> EVAL
+EVAL --> [*] : issue = PANNE_SURVENUE,\nPANNE_EVITEE ou INDETERMINEE
+
+note right of ACTIVE
+  EF-47 : pas plus d'une alerte active
+  du même type par ouvrage.
+  Saturer le comité, c'est le faire
+  décrocher.
+end note
+
+note bottom
+  L'issue alimente les deux métriques
+  de qualité du moteur : taux d'anticipation
+  et taux de fausses alertes (RG-06).
+end note
+
+@enduml

@@ -1,0 +1,70 @@
+@startuml AC5-traiter-alerte
+!include ../_style.puml
+
+title Activité - Traiter une alerte prédictive côté comité (EF-44, EF-46)
+
+|#EEF2F6|AquaSensus|
+|#F7F9FB|Délégué|
+
+|AquaSensus|
+start
+#FDEEE1:Alerte émise
+« Risque de panne élevé sous 14 jours »;
+:Notifier le délégué
+(in-app et SMS simulé);
+
+|Délégué|
+:Consulter l'alerte;
+:Lire l'explication
+et les 3 facteurs contributifs;
+
+if (Diagnostic jugé pertinent ?) then ([non])
+  :Contester avec motif;
+  |AquaSensus|
+  :Statut CONTESTEE, motif historisé
+  pour l'ajustement des seuils (RG-07);
+  :Arrêter les relances;
+  stop
+else ([oui])
+endif
+
+|Délégué|
+:Accuser réception;
+|AquaSensus|
+:Statut ACQUITTEE;
+
+|Délégué|
+if (Moyens disponibles maintenant ?) then ([oui])
+  :Créer une intervention PREVENTIVE
+  depuis l'alerte;
+  |AquaSensus|
+  :Lier l'alerte à l'intervention;
+  :Dérouler le cycle d'intervention
+  (voir AC3);
+  if (Intervention réalisée avant l'horizon ?) then ([oui])
+    #E6F4EC:Issue = PANNE_EVITEE,
+    alerte TRAITEE;
+  else ([non])
+    :Issue à réévaluer à l'échéance;
+  endif
+else ([non])
+  |Délégué|
+  :Reporter avec échéance
+  (cotisation, disponibilité technicien);
+  |AquaSensus|
+  #FEF3DC:Statut REPORTEE,
+  relance programmée;
+  |Délégué|
+  :Mobiliser la communauté
+  (cotisation, planification);
+  detach
+endif
+
+|AquaSensus|
+:À l'échéance de l'horizon,
+comparer alerte et pannes réelles;
+:Alimenter le taux d'anticipation
+et le taux de fausses alertes;
+stop
+
+@enduml

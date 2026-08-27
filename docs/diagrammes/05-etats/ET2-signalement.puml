@@ -1,0 +1,48 @@
+@startuml ET2-signalement
+!include ../_style.puml
+
+title Machine à états - Signalement (EF-13, EF-15, RG-03, RG-11)
+
+[*] --> RECU : création\n(web, mobile, SMS ou USSD)
+
+state RECU #D6EDF7
+state QUALIFIE #FEF3DC
+state DOUBLON #EEF2F6
+state REJETE #EEF2F6
+state RESOLU #E6F4EC
+
+RECU : en attente d'examen par le comité
+RECU : priorité recalculée à chaque corroboration
+
+QUALIFIE : incident reconnu
+QUALIFIE : éligible à une intervention
+
+DOUBLON : rattaché à un incident de référence
+DOUBLON : corroborations transférées
+
+REJETE : non fondé, motif obligatoire
+REJETE : sans effet sur l'état ni sur l'indice (RG-11)
+
+RESOLU : rétablissement confirmé
+RESOLU : alimente le temps de rétablissement
+
+RECU --> QUALIFIE : qualification par le délégué
+RECU --> REJETE : rejet motivé
+RECU --> DOUBLON : rattachement à un incident existant
+RECU --> RECU : nouvelle corroboration (< 24 h)
+
+QUALIFIE --> RESOLU : intervention clôturée
+QUALIFIE --> REJETE : requalification exceptionnelle\n(journalisée)
+DOUBLON --> RESOLU : l'incident de référence est résolu
+
+RESOLU --> [*]
+REJETE --> [*]
+
+note right of RECU
+  RG-03 : deux signalements identiques
+  sur le même ouvrage en moins de 24 h
+  forment un incident corroboré,
+  jamais deux incidents distincts.
+end note
+
+@enduml

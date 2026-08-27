@@ -1,0 +1,89 @@
+@startuml AC3-cycle-intervention
+!include ../_style.puml
+
+title Activité - Cycle de vie d'une intervention (EF-20 à EF-26)
+
+|#F7F9FB|Délégué|
+|#EFF8FC|Technicien|
+|#EEF2F6|AquaSensus|
+
+|Délégué|
+start
+:Ouvrir l'intervention
+(signalement, alerte ou saisie manuelle);
+:Choisir le type
+(corrective, préventive, inspection);
+:Affecter un technicien
+et une échéance souhaitée;
+
+|AquaSensus|
+:Statut AFFECTEE, horodatage;
+:Constituer le dossier de préparation
+(symptômes, historique, pièces posées);
+:Notifier le technicien;
+
+|Technicien|
+:Consulter le dossier
+avant le déplacement;
+:Démarrer l'intervention;
+
+|AquaSensus|
+:Statut EN_COURS;
+:Point d'eau en EN_REPARATION;
+
+|Technicien|
+while (Intervention réalisable ?) is ([non])
+  :Suspendre avec motif
+  (pièce, financement, accès, météo);
+  |AquaSensus|
+  #FEF3DC:Statut SUSPENDUE,
+  relance programmée;
+  |Technicien|
+  :Attendre la levée du blocage;
+endwhile ([oui])
+
+:Consigner diagnostic,
+cause racine et actions;
+:Déclarer les pièces remplacées
+et les coûts;
+
+|AquaSensus|
+if (Compte rendu complet ?) then ([non])
+  #FCEAEA:Refuser la transition (422)
+  et indiquer le champ manquant;
+  |Technicien|
+  :Compléter le compte rendu;
+  detach
+else ([oui])
+endif
+
+|Technicien|
+:Déclarer l'intervention réalisée;
+
+|AquaSensus|
+:Statut REALISEE;
+:Demander la confirmation
+au délégué;
+
+|Délégué|
+if (Rétablissement constaté sur place ?) then ([non])
+  :Refuser la clôture
+  et signaler la persistance;
+  |AquaSensus|
+  :Repasser en EN_COURS;
+  detach
+else ([oui])
+endif
+:Confirmer le rétablissement;
+
+|AquaSensus|
+:Statut CLOTUREE;
+:Calculer le temps de rétablissement
+depuis le premier signalement;
+:Point d'eau en OPERATIONNEL;
+:Résoudre les signalements rattachés;
+:Recalculer l'indice de santé;
+:Notifier les déclarants;
+stop
+
+@enduml

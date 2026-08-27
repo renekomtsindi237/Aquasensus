@@ -1,0 +1,63 @@
+@startuml SQ4-session-ussd
+!include ../_style.puml
+
+title Séquence - Session USSD simulée, arborescence de signalement (EF-63)
+
+autonumber "<b>[00]"
+
+actor "Habitant" as U
+participant "Console de simulation" as SIM
+participant "UssdController" as CTRL
+participant "SessionUssd" as SESSION
+participant "SignalementService" as SVC
+database "PostgreSQL" as DB
+
+U -> SIM : compose *123#
+SIM -> CTRL : POST /simulation/ussd/session
+CTRL -> SESSION : ouvrir(numéro fictif)
+SESSION -> SESSION : étape = MENU_PRINCIPAL\nexpiration = +90 s
+CTRL --> SIM : « AquaSensus\n1. Signaler un probleme\n2. Etat d'un point d'eau\n3. Mes signalements »
+
+U -> SIM : 1
+SIM -> CTRL : POST /simulation/ussd/session (sessionId, « 1 »)
+CTRL -> SESSION : avancer(« 1 »)
+SESSION -> SESSION : étape = SAISIE_CODE_OUVRAGE
+CTRL --> SIM : « Entrez le code du point d'eau\n(ex: YDE-042) »
+
+U -> SIM : YDE-042
+SIM -> CTRL : POST ... (« YDE-042 »)
+CTRL -> SESSION : avancer(« YDE-042 »)
+SESSION -> DB : vérifier l'existence de l'ouvrage
+
+alt Code inconnu
+  SESSION --> CTRL : erreur
+  CTRL --> SIM : « Code inconnu. Reessayez. »
+else Code valide
+  SESSION -> SESSION : contexte[ouvrage] = YDE-042\nétape = CHOIX_SYMPTOME
+  CTRL --> SIM : « 1. Panne totale  2. Debit faible\n3. Eau trouble  4. Bruit\n5. Fuite  6. Autre »
+
+  U -> SIM : 2
+  SIM -> CTRL : POST ... (« 2 »)
+  CTRL -> SESSION : avancer(« 2 »)
+  SESSION -> SESSION : contexte[symptome] = DEBIT_FAIBLE\nétape = CONFIRMATION
+  CTRL --> SIM : « Confirmer ?  1. Oui  2. Non »
+
+  U -> SIM : 1
+  SIM -> CTRL : POST ... (« 1 »)
+  CTRL -> SESSION : avancer(« 1 »)
+  SESSION -> SVC : creer(commande, canal = USSD)
+  SVC -> DB : corroboration ou nouvel incident
+  SVC --> SESSION : SIG-2026-01187
+  SESSION -> SESSION : étape = TERMINEE
+  CTRL --> SIM : « Signalement SIG-2026-01187\nenregistre. Le comite est averti. »
+end
+
+== Expiration ==
+
+U -> SIM : (aucune saisie pendant 90 s)
+SIM -> CTRL : POST ... (saisie tardive)
+CTRL -> SESSION : estExpiree() ?
+SESSION --> CTRL : vrai
+CTRL --> SIM : « Session expiree.\nComposez *123# a nouveau. »
+
+@enduml

@@ -1,0 +1,113 @@
+@startuml CL1-identite-rbac
+!include ../_style.puml
+
+title Domaine « identity » - Utilisateurs, rôles et périmètres
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+class Utilisateur <<AggregateRoot>> {
+  -id : UUID
+  -identifiant : String
+  -motDePasseHache : String
+  -nomAffichage : String
+  -telephone : Telephone
+  -statut : StatutCompte
+  -echecsConsecutifs : int
+  -verrouilleJusqua : Instant
+  -doitChangerMotDePasse : boolean
+  --
+  +authentifier(motDePasse) : boolean
+  +enregistrerEchec() : void
+  +estVerrouille() : boolean
+  +possede(Role) : boolean
+  +couvre(PerimetreCible) : boolean
+}
+
+class AffectationRole <<Entity>> {
+  -attribueeLe : Instant
+  -attribueePar : UUID
+}
+
+class Role <<Entity>> {
+  -code : CodeRole
+  -libelle : String
+  -permissions : Set<Permission>
+}
+
+class Perimetre <<ValueObject>> {
+  -comiteIds : Set<UUID>
+  -localiteIds : Set<UUID>
+  --
+  +contient(PointEau) : boolean
+  +estGlobal() : boolean
+}
+
+class Telephone <<ValueObject>> {
+  -empreinte : String
+  -quatreDerniers : String
+  --
+  +masque() : String
+}
+
+class SessionAuthentification <<Entity>> {
+  -jetonAcces : String
+  -jetonRafraichissement : String
+  -expireLe : Instant
+  -revoquee : boolean
+}
+
+package "Énumérations" {
+  enum CodeRole {
+    USAGER
+    DELEGUE
+    TECHNICIEN
+    PARTENAIRE
+    ADMIN
+  }
+
+  enum Permission {
+    SIGNALEMENT_CREER
+    SIGNALEMENT_QUALIFIER
+    INTERVENTION_AFFECTER
+    INTERVENTION_EXECUTER
+    INTERVENTION_CLOTURER
+    SAISON_PARAMETRER
+    ALERTE_TRAITER
+    KPI_CONSULTER
+    REFERENTIEL_GERER
+    COMPTE_GERER
+    AUDIT_CONSULTER
+  }
+
+  enum StatutCompte {
+    ACTIF
+    SUSPENDU
+    VERROUILLE
+  }
+}
+
+Utilisateur "1" *-down- "1..*" AffectationRole
+AffectationRole "0..*" -down-> "1" Role
+Utilisateur "1" *-left- "1" Perimetre
+Utilisateur "1" *-left- "0..1" Telephone
+Utilisateur "1" *-down- "0..*" SessionAuthentification
+Role "1" o-right- "1..*" Permission
+Role -right-> CodeRole
+Utilisateur -right-> StatutCompte
+
+note bottom of Perimetre
+  Le contrôle d'accès combine
+  rôle ET périmètre : un délégué
+  n'agit que sur les ouvrages
+  de son comité (ENF-22).
+end note
+
+note right of Telephone
+  Le numéro n'est jamais stocké en clair :
+  empreinte + 4 derniers chiffres
+  pour la restitution (RG-10, ENF-31).
+end note
+
+@enduml

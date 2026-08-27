@@ -1,0 +1,86 @@
+@startuml G3-activite-processus-global
+!include ../_style.puml
+
+title AquaSensus - Processus global, du symptôme au rétablissement
+
+' Couleurs littérales : les couloirs n'acceptent pas les variables de style.
+' blue-50 / neutral-50 / blue-50 / neutral-100 (docs/CHARTE-GRAPHIQUE.md)
+|#EFF8FC|Habitant|
+|#F7F9FB|Comité / délégué|
+|#EFF8FC|Technicien|
+|#EEF2F6|AquaSensus|
+
+|Habitant|
+start
+:Constater un dysfonctionnement
+sur le point d'eau;
+:Signaler
+(PWA, mobile ou SMS/USSD);
+
+|AquaSensus|
+:Enregistrer le signalement
+(idempotent, UUID client);
+if (Signalement identique
+sur 24 h ?) then ([oui])
+  :Corroborer le signalement
+  de référence;
+else ([non])
+  :Créer un nouvel incident;
+endif
+:Calculer la priorité;
+:Notifier le comité;
+
+|Comité / délégué|
+:Examiner le signalement;
+if (Signalement recevable ?) then ([non])
+  |AquaSensus|
+  :Rejeter avec motif
+  (aucun impact sur l'état
+  ni sur l'indice);
+  stop
+else ([oui])
+endif
+|Comité / délégué|
+:Qualifier le signalement;
+:Créer l'intervention
+et affecter un technicien;
+
+|AquaSensus|
+:Constituer le dossier de préparation
+(symptômes, historique, pièces posées);
+:Notifier le technicien;
+
+|Technicien|
+:Se déplacer avec le diagnostic préalable;
+:Réaliser l'intervention;
+:Consigner diagnostic, cause racine,
+pièces et coûts;
+note right
+  Saisie possible hors ligne :
+  mise en file locale puis rejeu.
+end note
+:Déclarer l'intervention réalisée;
+
+|Comité / délégué|
+if (Eau effectivement rétablie ?) then ([non])
+  |Technicien|
+  :Reprendre l'intervention;
+  detach
+else ([oui])
+endif
+|Comité / délégué|
+:Confirmer le rétablissement;
+
+|AquaSensus|
+:Clôturer l'intervention;
+:Calculer le temps de rétablissement;
+:Repasser le point d'eau
+en OPERATIONNEL;
+:Recalculer l'indice de santé;
+:Notifier les déclarants;
+
+|Habitant|
+:Être informé du rétablissement;
+stop
+
+@enduml

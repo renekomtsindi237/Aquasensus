@@ -1,0 +1,71 @@
+@startuml SQ2-signalement-pwa
+!include ../_style.puml
+
+title Séquence - Signalement depuis la PWA, avec corroboration (EF-10, EF-13, EF-14)
+
+autonumber "<b>[00]"
+
+actor "Habitant" as U
+participant "PWA" as APP
+participant "File locale\n(IndexedDB)" as FILE
+participant "ReportController" as CTRL
+participant "SignalementService" as SVC
+participant "PolitiquePriorite" as PRIO
+database "PostgreSQL" as DB
+participant "MessagingGateway" as GW
+actor "Délégué" as D
+
+U -> APP : choisit l'ouvrage et le symptôme
+APP -> APP : génère uuidClient\net horodate localement
+APP -> FILE : enregistrer (statut EN_ATTENTE)
+APP --> U : « Signalement à envoyer »
+
+alt Réseau indisponible
+  APP -> APP : attendre la reconnexion
+  note right : voir AC7 / SQ6
+end
+
+APP -> CTRL : POST /reports\nX-Client-Request-Id: uuidClient
+CTRL -> SVC : creer(commande)
+SVC -> DB : chercher un signalement de même catégorie\nsur l'ouvrage depuis moins de 24 h
+
+alt Signalement corroborable trouvé
+  SVC -> DB : rattacher et incrémenter\nnbCorroborations
+  SVC -> PRIO : recalculer la priorité
+  PRIO --> SVC : priorité mise à jour
+else Aucun signalement corroborable
+  SVC -> DB : insérer un incident (statut RECU)
+  SVC -> PRIO : calculer la priorité initiale
+  PRIO --> SVC : priorité
+end
+
+alt Catégorie PANNE_TOTALE confirmée
+  SVC -> DB : point d'eau → EN_PANNE
+  SVC -> DB : historiser le changement d'état
+end
+
+alt Gravité haute
+  SVC -> GW : notifier le comité
+  GW -> D : « Panne signalée sur YDE-042 »
+end
+
+SVC --> CTRL : signalement + état de prise en charge
+CTRL --> APP : 201 + référence
+APP -> FILE : marquer ENVOYE
+APP --> U : « Déjà signalé par 6 personnes.\nLe comité a été averti. »
+
+== Rejeu après coupure ==
+
+APP -> CTRL : POST /reports (même uuidClient)
+CTRL -> SVC : creer(commande)
+SVC -> DB : uuidClient déjà présent ?
+SVC --> CTRL : signalement existant
+CTRL --> APP : 200 (aucune création)
+
+note over CTRL, DB
+  L'idempotence par uuidClient est ce qui rend
+  le mode hors ligne sûr : un rejeu ne crée
+  jamais de doublon (EF-97).
+end note
+
+@enduml

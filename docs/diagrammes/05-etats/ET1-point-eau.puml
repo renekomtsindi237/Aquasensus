@@ -1,0 +1,66 @@
+@startuml ET1-point-eau
+!include ../_style.puml
+
+title Machine à états - Point d'eau (EF-04, RG-02, RG-12)
+
+[*] --> OPERATIONNEL : mise en service
+
+state OPERATIONNEL #E6F4EC
+state SOUS_SURVEILLANCE #FEF3DC
+state RISQUE_ELEVE #FDEEE1
+state EN_PANNE #FCEAEA
+state EN_REPARATION #D6EDF7
+state HORS_SERVICE #EEF2F6
+
+OPERATIONNEL : indice ≥ 80
+OPERATIONNEL : eau disponible
+
+SOUS_SURVEILLANCE : indice 60-79
+SOUS_SURVEILLANCE : signaux faibles présents
+SOUS_SURVEILLANCE : eau disponible
+
+RISQUE_ELEVE : indice < 60 ou alerte active
+RISQUE_ELEVE : eau encore disponible
+RISQUE_ELEVE : maintenance préventive recommandée
+
+EN_PANNE : eau indisponible
+EN_PANNE : compte dans la continuité d'accès
+
+EN_REPARATION : intervention EN_COURS
+EN_REPARATION : compte dans la continuité d'accès
+
+HORS_SERVICE : ouvrage abandonné ou irréparable
+HORS_SERVICE : exclu des KPI de disponibilité (RG-12)
+
+OPERATIONNEL --> SOUS_SURVEILLANCE : indice retombe sous 80\nou signal faible répété
+SOUS_SURVEILLANCE --> OPERATIONNEL : indice ≥ 80\naprès maintenance
+SOUS_SURVEILLANCE --> RISQUE_ELEVE : alerte prédictive émise
+RISQUE_ELEVE --> SOUS_SURVEILLANCE : alerte traitée ou caduque
+
+OPERATIONNEL --> EN_PANNE : panne totale confirmée
+SOUS_SURVEILLANCE --> EN_PANNE : panne totale confirmée
+RISQUE_ELEVE --> EN_PANNE : panne totale confirmée
+
+EN_PANNE --> EN_REPARATION : intervention démarrée
+EN_REPARATION --> OPERATIONNEL : rétablissement confirmé\npar un tiers
+EN_REPARATION --> EN_PANNE : intervention suspendue
+EN_REPARATION --> HORS_SERVICE : irréparable
+
+HORS_SERVICE --> OPERATIONNEL : réhabilitation
+HORS_SERVICE --> [*] : ouvrage désaffecté
+
+note right of EN_PANNE
+  RG-02 : bascule sur panne totale
+  qualifiée par un délégué ou
+  corroborée par au moins
+  deux déclarants.
+end note
+
+note bottom
+  Les couleurs sont celles de la charte (§4.3).
+  Chaque état est aussi porté par une forme
+  et un libellé : l'information ne dépend
+  jamais de la seule couleur (ENF-43).
+end note
+
+@enduml

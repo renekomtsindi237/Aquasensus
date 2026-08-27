@@ -1,0 +1,161 @@
+@startuml G2-classes-domaine-global
+!include ../_style.puml
+
+title AquaSensus - Modèle du domaine, vue globale
+
+skinparam nodesep 30
+skinparam ranksep 55
+hide circle
+
+class Localite {
+  +code : String
+  +nom : String
+  +niveau : NiveauLocalite
+}
+
+class Comite {
+  +nom : String
+  +telephoneContact : String
+  +actif : boolean
+}
+
+class Utilisateur {
+  +identifiant : String
+  +nomAffichage : String
+  +roles : Set<Role>
+  +perimetre : Perimetre
+}
+
+class PointEau {
+  +code : String
+  +nomUsage : String
+  +type : TypePointEau
+  +position : Coordonnees
+  +populationDesservie : int
+  +etat : EtatPointEau
+  --
+  +estDisponible() : boolean
+  +changerEtat(EtatPointEau, motif)
+}
+
+class HistoriqueEtat {
+  +etatPrecedent : EtatPointEau
+  +etatNouveau : EtatPointEau
+  +motif : String
+  +survenuLe : Instant
+}
+
+class Signalement {
+  +reference : String
+  +uuidClient : UUID
+  +categorie : CategorieSymptome
+  +gravite : Gravite
+  +canal : Canal
+  +statut : StatutSignalement
+  +nbCorroborations : int
+  +declareLe : Instant
+  --
+  +corroborer(Signalement)
+  +qualifier(Utilisateur)
+}
+
+class Intervention {
+  +reference : String
+  +type : TypeIntervention
+  +origine : OrigineIntervention
+  +statut : StatutIntervention
+  +diagnostic : String
+  +causeRacine : String
+  +tempsRetablissement : Duration
+  --
+  +transiter(StatutIntervention, Utilisateur)
+  +cloturer(Utilisateur confirmateur)
+}
+
+class PieceRemplacee {
+  +reference : String
+  +quantite : int
+  +cout : Montant
+}
+
+class CalendrierSaisonnier {
+  +libelle : String
+  +jourDebut : int
+  +jourFin : int
+  +coefficient : BigDecimal
+  --
+  +coefficient(LocalDate) : BigDecimal
+}
+
+class IndiceSante {
+  +dateCalcul : LocalDate
+  +score : int
+  +bande : BandeSante
+  +confiance : Confiance
+  +chargeCumuleeJours : BigDecimal
+  +intervalleEffectifJours : int
+  +facteurs : List<Facteur>
+}
+
+class Alerte {
+  +regle : CodeRegle
+  +niveau : NiveauAlerte
+  +horizonJours : int
+  +explication : String
+  +statut : StatutAlerte
+  +issue : IssueAlerte
+  --
+  +acquitter(Utilisateur)
+  +contester(String motif)
+}
+
+class MessageSimule {
+  +direction : Direction
+  +canal : Canal
+  +numeroFictif : String
+  +contenu : String
+  +sessionId : String
+}
+
+Localite "1" o-- "0..*" Localite : parent >
+Localite "1" *-- "0..*" PointEau : abrite >
+Comite "1" *-- "0..*" PointEau : gère >
+Comite "1" o-- "0..*" Utilisateur : rattache >
+
+PointEau "1" *-- "0..*" HistoriqueEtat : trace >
+PointEau "1" *-- "0..*" Signalement : concerne >
+PointEau "1" *-- "0..*" IndiceSante : évalue >
+Localite "1" o-- "0..*" CalendrierSaisonnier : rythme >
+CalendrierSaisonnier "1" -- "0..*" IndiceSante : pondère la charge >
+PointEau "1" *-- "0..*" Alerte : déclenche >
+PointEau "1" *-- "0..*" Intervention : subit >
+
+Signalement "0..*" -- "0..1" Signalement : corrobore >
+Signalement "1..*" -- "0..1" Intervention : motive >
+Alerte "0..1" -- "0..1" Intervention : génère >
+Intervention "1" *-- "0..*" PieceRemplacee : consomme >
+
+Utilisateur "1" -- "0..*" Signalement : déclare >
+Utilisateur "1" -- "0..*" Intervention : réalise >
+MessageSimule "0..1" -- "0..1" Signalement : origine de >
+
+note bottom of Intervention
+  tempsRetablissement = clôture confirmée
+  − premier signalement rattaché (RG-04).
+  C'est le KPI social n°1.
+end note
+
+note bottom of IndiceSante
+  Aucune entité ne porte de volume d'eau :
+  le volume consommé est inconnaissable (H-2).
+  La charge est estimée en jours pondérés,
+  à partir de la population desservie,
+  du temps écoulé et de la saison.
+end note
+
+legend bottom
+  Vue d'analyse : entités métier, sans détail de persistance ni de couche technique.
+  Énumérations et invariants détaillés dans 02-classes.
+end legend
+
+@enduml

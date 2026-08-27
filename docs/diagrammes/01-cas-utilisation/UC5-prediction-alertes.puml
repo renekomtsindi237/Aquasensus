@@ -1,0 +1,54 @@
+@startuml UC5-prediction-alertes
+!include ../_style.puml
+
+title Module M5 - Indice de santé et alertes prédictives
+
+left to right direction
+skinparam nodesep 16
+skinparam ranksep 60
+
+actor "Délégué" as DELEGUE
+actor "Technicien" as TECH
+actor "Partenaire" as PARTENAIRE
+actor "Administrateur" as ADMIN
+actor "Moteur prédictif\n(Python, quotidien)" as MOTEUR <<système>>
+
+rectangle "M5 - Prédiction" {
+  usecase "EF-40\nCalculer l'indice\nde santé (0-100)" as U40
+  usecase "EF-41\nÉmettre une alerte\nde seuil critique" as U41
+  usecase "EF-42\nExpliquer l'alerte\n(3 facteurs, seuils, règle)" as U42
+  usecase "EF-43\nNotifier le comité\net le partenaire" as U43
+  usecase "EF-44\nAcquitter, planifier,\nreporter ou contester" as U44
+  usecase "EF-45\nParamétrer seuils,\npondérations et horizon" as U45
+  usecase "EF-46\nHistoriser l'alerte\net son issue" as U46
+  usecase "EF-47\nÉviter la saturation\net clore les alertes caduques" as U47
+}
+
+MOTEUR --> U40
+MOTEUR --> U41
+DELEGUE --> U44
+DELEGUE --> U42
+TECH --> U42
+PARTENAIRE --> U46
+ADMIN --> U45
+
+U41 ..> U40 : <<include>>
+U41 ..> U42 : <<include>>
+U41 ..> U47 : <<include>>
+U41 ..> U43 : <<include>>
+U44 ..> U46 : <<include>>
+U45 ..> U40 : <<extend>>
+
+note bottom of U42
+  Une alerte sans explication compréhensible
+  par un délégué est un défaut,
+  pas une fonctionnalité (EF-42).
+end note
+
+note bottom of U46
+  L'issue (panne survenue / évitée)
+  alimente le taux d'anticipation
+  et le taux de fausses alertes.
+end note
+
+@enduml

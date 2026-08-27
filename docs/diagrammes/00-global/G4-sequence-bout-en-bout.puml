@@ -1,0 +1,71 @@
+@startuml G4-sequence-bout-en-bout
+!include ../_style.puml
+
+title AquaSensus - Séquence bout en bout, signalement puis rétablissement
+
+autonumber "<b>[00]"
+
+actor "Habitant" as U
+participant "PWA / Flutter" as APP
+box "Cœur métier (Java / Spring)" #F7F9FB
+  participant "API REST" as API
+  participant "Service\nSignalement" as SVC_SIG
+  participant "Service\nMaintenance" as SVC_INT
+end box
+database "PostgreSQL" as DB
+participant "MessagingGateway\n(simulé)" as GW
+actor "Délégué" as D
+actor "Technicien" as T
+
+U -> APP : Sélectionne le point d'eau\net le symptôme
+APP -> API : POST /reports\n(X-Client-Request-Id)
+API -> SVC_SIG : créerSignalement(commande)
+SVC_SIG -> DB : rechercher un signalement\ncorroborable (24 h)
+
+alt Signalement identique existant
+  SVC_SIG -> DB : incrémenter les corroborations
+else Nouvel incident
+  SVC_SIG -> DB : insérer le signalement
+end
+
+SVC_SIG -> DB : historiser l'état du point d'eau
+SVC_SIG -> GW : notifier le comité
+GW -> D : « Panne signalée sur YDE-042 »
+API --> APP : 201 + référence + prise en charge
+APP --> U : « Déjà signalé par 6 personnes.\nLe comité a été averti. »
+
+== Prise en charge par le comité ==
+
+D -> API : PATCH /reports/{id}/qualification
+API -> SVC_SIG : qualifier(délégué)
+D -> API : POST /interventions
+API -> SVC_INT : ouvrirIntervention(signalements)
+SVC_INT -> DB : créer l'intervention (OUVERTE → AFFECTEE)
+SVC_INT -> GW : notifier le technicien affecté
+GW -> T : ordre d'intervention
+
+== Intervention terrain ==
+
+T -> APP : Consulte le dossier de préparation
+APP -> API : GET /interventions/{id}/briefing
+API --> APP : symptômes, historique, pièces posées
+T -> APP : Diagnostic, actions, pièces (hors ligne possible)
+APP -> API : PUT /interventions/{id}/report
+APP -> API : POST /interventions/{id}/transitions (REALISEE)
+
+== Confirmation et mesure ==
+
+D -> API : POST /interventions/{id}/transitions (CLOTUREE)
+API -> SVC_INT : cloturer(confirmateur)
+SVC_INT -> SVC_INT : temps de rétablissement =\nclôture − premier signalement
+SVC_INT -> DB : enregistrer la clôture et le délai
+SVC_INT -> DB : point d'eau → OPERATIONNEL
+SVC_INT -> GW : notifier les déclarants
+GW -> U : « Eau rétablie. Interruption : 3 j 14 h. »
+
+note over SVC_INT, DB
+  La clôture exige un confirmateur distinct
+  du technicien déclarant (RG-04, EF-24).
+end note
+
+@enduml

@@ -1,0 +1,111 @@
+@startuml CL3-signalement
+!include ../_style.puml
+
+title Domaine « reporting » - Signalements et corroboration
+
+hide circle
+skinparam nodesep 28
+skinparam ranksep 50
+
+class Signalement <<AggregateRoot>> {
+  -id : UUID
+  -reference : String
+  -uuidClient : UUID
+  -pointEauId : UUID
+  -categorie : CategorieSymptome
+  -gravite : Gravite
+  -commentaire : String
+  -canal : Canal
+  -statut : StatutSignalement
+  -nbCorroborations : int
+  -priorite : short
+  -prioriteFigee : boolean
+  -declareLe : Instant
+  --
+  +corroborerAvec(Signalement) : void
+  +qualifier(Utilisateur) : void
+  +rejeter(motif, Utilisateur) : void
+  +marquerDoublon(Signalement) : void
+  +recalculerPriorite(PointEau) : short
+  +estBloquant() : boolean
+}
+
+class Declarant <<ValueObject>> {
+  -utilisateurId : UUID
+  -telephone : Telephone
+  --
+  +estAnonyme() : boolean
+  +anonymiser() : Declarant
+}
+
+class FenetreCorroboration <<ValueObject>> {
+  -duree : Duration
+  --
+  +couvre(Instant, Instant) : boolean
+}
+
+class PolitiquePriorite <<DomainService>> {
+  --
+  +calculer(gravite, corroborations, population) : short
+}
+
+package "Énumérations" {
+  enum CategorieSymptome {
+    PANNE_TOTALE
+    DEBIT_FAIBLE
+    EAU_TROUBLE
+    EAU_MALODORANTE
+    BRUIT_ANORMAL
+    FUITE
+    DEGRADATION_OUVRAGE
+    ATTENTE_EXCESSIVE
+    AUTRE
+    --
+    +estSignalFaible() : boolean
+  }
+
+  enum Gravite {
+    FAIBLE
+    MOYENNE
+    HAUTE
+  }
+
+  enum StatutSignalement {
+    RECU
+    QUALIFIE
+    REJETE
+    DOUBLON
+    RESOLU
+  }
+
+  enum Canal {
+    WEB
+    MOBILE
+    SMS
+    USSD
+  }
+}
+
+Signalement "0..*" -up-> "0..1" Signalement : signalementParent
+Signalement "1" *-down- "1" Declarant
+Signalement -right-> CategorieSymptome
+Signalement -right-> Gravite
+Signalement -right-> StatutSignalement
+Signalement -right-> Canal
+PolitiquePriorite .down.> Signalement : calcule
+FenetreCorroboration <.down. Signalement : applique
+
+note bottom of Signalement
+  uuidClient rend la création idempotente :
+  un rejeu après coupure réseau
+  ne crée jamais de doublon (EF-97).
+end note
+
+note right of CategorieSymptome
+  estSignalFaible() distingue les symptômes
+  annonciateurs d'usure (débit faible, bruit,
+  eau trouble, attente) de la panne totale.
+  Ils alimentent l'indicateur S du moteur.
+end note
+
+@enduml

@@ -1,0 +1,85 @@
+@startuml AC1-signaler-incident
+!include ../_style.puml
+
+title Activité - Créer un signalement (EF-10 à EF-14)
+
+start
+:Ouvrir AquaSensus
+ou composer le code USSD;
+
+if (Utilisateur authentifié ?) then ([oui])
+  :Charger le périmètre
+  et les ouvrages proches;
+else ([non])
+  :Parcours public :
+  saisir le numéro de téléphone;
+  :Vérifier le code
+  à usage unique (simulé);
+  if (Quota public dépassé ?\n5 signalements / heure) then ([oui])
+    #FCEAEA:Refuser (429)
+    et expliquer la limite;
+    stop
+  else ([non])
+  endif
+endif
+
+:Sélectionner le point d'eau
+(carte, liste ou code court);
+:Choisir la catégorie de symptôme;
+:Choisir la gravité perçue;
+:Ajouter commentaire et photo
+(facultatifs);
+
+:Générer un uuidClient
+et horodater localement;
+
+if (Réseau disponible ?) then ([non])
+  #EEF2F6:Mettre en file locale
+  et afficher « à envoyer »;
+  :Rejouer à la reconnexion
+  (voir AC7);
+  detach
+else ([oui])
+endif
+
+:Envoyer POST /reports;
+
+partition "Traitement serveur" {
+  if (uuidClient déjà traité ?) then ([oui])
+    :Retourner la réponse
+    précédente (idempotence);
+    stop
+  else ([non])
+  endif
+
+  if (Signalement de même catégorie\nsur l'ouvrage depuis moins de 24 h ?) then ([oui])
+    :Rattacher au signalement
+    de référence;
+    :Incrémenter les corroborations;
+  else ([non])
+    :Créer un nouvel incident
+    au statut RECU;
+  endif
+
+  :Calculer la priorité
+  (gravité, corroborations, population);
+
+  if (Catégorie = PANNE_TOTALE\net incident confirmé ?) then ([oui])
+    #FCEAEA:Basculer l'ouvrage
+    en EN_PANNE;
+    :Historiser le changement d'état;
+  else ([non])
+  endif
+
+  if (Gravité haute ?) then ([oui])
+    :Notifier le délégué
+    du comité;
+  else ([non])
+  endif
+}
+
+:Afficher l'état de prise en charge
+(« déjà signalé par N personnes »);
+stop
+
+@enduml
