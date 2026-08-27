@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="AquaSensus">
+  <title>AquaSensus</title>
+  <desc>Goutte d'eau formant un repere de carte, traversee par une onde de signal.</desc>
+  <path
+    d="M32 4.5c0 0-19.5 20.6-19.5 34.3a19.5 19.5 0 1 0 39 0C51.5 25.1 32 4.5 32 4.5Z"
+    fill="#106D99" />
+  <path
+    d="M19.5 40.5h6.2l3.9-8.4 5.1 15.2 3.9-6.8h5.9"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="3.4"
+    stroke-linecap="round"
+    stroke-linejoin="round" />
+</svg>

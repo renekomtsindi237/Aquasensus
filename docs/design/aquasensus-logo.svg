@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" width="320" height="72" role="img" aria-label="AquaSensus - Anticiper la panne, garder l'eau">
+  <title>AquaSensus</title>
+  <desc>Verrouillage horizontal : symbole, nom et signature.</desc>
+  <g transform="translate(4 4)">
+    <path
+      d="M32 4.5c0 0-19.5 20.6-19.5 34.3a19.5 19.5 0 1 0 39 0C51.5 25.1 32 4.5 32 4.5Z"
+      fill="#106D99" />
+    <path
+      d="M19.5 40.5h6.2l3.9-8.4 5.1 15.2 3.9-6.8h5.9"
+      fill="none"
+      stroke="#FFFFFF"
+      stroke-width="3.4"
+      stroke-linecap="round"
+      stroke-linejoin="round" />
+  </g>
+  <text
+    x="80" y="36"
+    font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    font-size="28" font-weight="700" letter-spacing="-0.4"
+    fill="#0B4763">Aqua<tspan fill="#106D99">Sensus</tspan></text>
+  <text
+    x="81" y="55"
+    font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    font-size="12" font-weight="500" letter-spacing="0.2"
+    fill="#51606F">Anticiper la panne, garder l'eau.</text>
+</svg>
