@@ -1,0 +1,60 @@
+---
+description: Contexte canonique AquaSensus — mission sociale, acteurs, périmètre, stack. Toujours actif.
+alwaysApply: true
+---
+
+# AquaSensus — contexte permanent
+
+Avant toute conception ou code, relire et respecter `docs/CONTEXTE-AQUASENSUS.md` (bible). Ne pas inventer de capteurs IoT chers, d’accords étatiques/opérateurs, ni de KYC lourd.
+
+## Documents canoniques
+
+| Fichier | Rôle |
+| --- | --- |
+| `docs/CONTEXTE-AQUASENSUS.md` | Bible — prévaut sur tout |
+| `docs/CAHIER-DES-CHARGES.md` | Exigences `EF-nn` / `ENF-nn`, règles `RG-nn`, modèle de données, API, moteur prédictif, recette |
+| `docs/CAHIER-ANALYSE.md` | Analyse : acteurs, cas d’utilisation, modèle du domaine, invariants, traçabilité (sans technologie) |
+| `docs/CAHIER-CONCEPTION.md` | Conception : décisions d’architecture `DA-nn`, couches, persistance, API, sécurité, tests |
+| `docs/diagrammes/` | UML PlantUML : 4 vues globales puis 35 vues détaillées (cas d’utilisation, classes, activités, séquences, états) |
+| `docs/CHARTE-GRAPHIQUE.md` | Identité, design system, couleurs d’état, accessibilité, ton éditorial |
+| `docs/design/` | Actifs : logo, sources SVG, `tokens.css`, `tokens.dart` |
+
+Chaîne documentaire : besoin → `CAHIER-DES-CHARGES` (quoi) → `CAHIER-ANALYSE` (quoi, structuré, sans technologie) → `CAHIER-CONCEPTION` (comment) → code. L’analyse ne nomme aucune technologie ; la conception ne crée aucune règle métier. Les diagrammes `.puml` font foi, les rendus SVG sont générés.
+
+Toute exigence implémentée doit citer son identifiant. Toute interface consomme les tokens de design, jamais des valeurs brutes. Une contradiction se résout en mettant à jour le document concerné.
+
+## Identité visuelle
+
+**Logo par défaut de toutes les applications : `docs/design/aquasensus-logo.png`.** Ne jamais introduire un autre fichier pour représenter la marque, ni générer un logo à la volée.
+
+- fond sombre / écran de démarrage → `aquasensus-logo-inverse.png` ;
+- surface carrée ou largeur < 120 px (favicon, icône d’app, marqueur, avatar) → `aquasensus-mark-*.png` ;
+- impression grand format → `aquasensus-logo.svg`.
+
+Les fronts copient l’actif depuis `docs/design/` vers `assets/brand/` sans le modifier. Rasters régénérés par `python docs/design/render-brand.py`.
+
+## Mission
+
+Plateforme collaborative et data-driven de **signalement + gestion + maintenance prédictive simple** des forages / mini-réseaux communautaires (Yaoundé périphérique, rural/semi-rural Cameroun). Objectif : éviter les pannes surprises qui privent des centaines de familles d’eau potable.
+
+Fibre : utilité publique (santé, corvée d’eau, cohésion). KPI n°1 : **temps de rétablissement**.
+
+## Acteurs (RBAC)
+
+Usager, comité/délégué, technicien, association/mairie, admin. Signalement humain + historique de pannes + charge d’usage estimée (population, calendrier, dernière maintenance). **Aucun volume n’est collecté** : les habitants puisent librement, le niveau consommé en fin de journée est inconnaissable. Ne jamais inventer d’écran de relevé (bidons, seaux, minutes de pompage, capteur).
+
+## Produit
+
+Carte d’état des points d’eau, interventions, alertes de seuil critique (règles / séries temporelles interprétables, ex. risque de panne sous ~2 semaines). Canal **SMS/USSD simulé**. Docker/Linux, open-source, déployable ONG/mairie.
+
+## Stack (ne pas substituer sans MAJ de la bible)
+
+- Fronts : Angular PWA + Flutter
+- Métier/API/sécu : Java MVC + Spring Security + REST
+- Data/prédiction : Python
+- PostgreSQL + **Flyway SQL uniquement**
+- Lakehouse = évolution, pas un bloqueur v1
+
+## Qualité
+
+TDD par couche. Pas de logique métier dupliquée dans les fronts. APIs documentées.

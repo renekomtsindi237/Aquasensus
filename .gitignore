@@ -49,3 +49,5 @@ backend-java/.classpath
 backend-java/.project
 backend-java/.settings/
 infra/sauvegarde/dumps/
+
+.cursorrules.txt

@@ -18,7 +18,7 @@ jobs:
           cache-dependency-path: backend-java/pom.xml
       - name: Tests cœur métier + JaCoCo
         working-directory: backend-java
-        run: ./mvnw -B test
+        run: sh ./mvnw -B test
 
   python:
     runs-on: ubuntu-latest
